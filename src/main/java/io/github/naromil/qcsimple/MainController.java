@@ -1,20 +1,14 @@
-package naromil.qcsimple;
+package io.github.naromil.qcsimple;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
+import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import net.querz.nbt.io.NBTUtil;
-import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
-import java.util.Objects;
 
 public class MainController {
     /**
@@ -29,11 +23,13 @@ public class MainController {
         alert.setTitle("About Quarterchunk Simple");
         alert.setHeaderText("Minecraft Quarterchunk Simple v1.0");
         alert.setContentText(
-                "An interactive 3D editor for Minecraft Quarterchunk structure files in .nbt format.\n\n" +
-                        "Features:\n" +
-                        "• Source management panel\n" +
-                        "• Interactive 3D voxel renderer\n" +
-                        "• Structural rotation and editing tools"
+                """
+                        An interactive 3D editor for Minecraft Quarterchunk structure files in .nbt format.
+                        
+                        Features:
+                        • Source management panel
+                        • Interactive 3D voxel renderer
+                        • Structural rotation and editing tools"""
         );
 
         // 3. Display the dialog and block user interaction with the main window until closed
@@ -87,7 +83,7 @@ public class MainController {
     }
 
     @FXML
-    public void onSaveMenuAction() {
+    protected void onSaveMenuAction() {
         EditorState state = EditorState.getInstance();
 
         // If there is no open file path, fallback to "Save As" behavior
@@ -99,7 +95,7 @@ public class MainController {
     }
 
     @FXML
-    public void onSaveAsMenuAction() {
+    protected void onSaveAsMenuAction() {
         EditorState state = EditorState.getInstance();
         if (state.getRootCompoundTag() == null) {
             showErrorDialog("Save Error", "No structure data found in memory to save.");
@@ -138,4 +134,7 @@ public class MainController {
             showErrorDialog("Save Failed", "Could not commit structure data to disk:\n" + e.getMessage());
         }
     }
+
+    @FXML
+    protected TextField blcFramework, blcColumn, blcRow;
 }

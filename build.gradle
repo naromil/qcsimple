@@ -29,5 +29,5 @@ test {
 }
 
 application {
-    mainClass = 'naromil.qcsimple.Launcher'
+    mainClass = 'io.github.naromil.qcsimple.Launcher'
 }

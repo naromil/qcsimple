@@ -1,4 +1,4 @@
-package naromil.qcsimple;
+package io.github.naromil.qcsimple;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
