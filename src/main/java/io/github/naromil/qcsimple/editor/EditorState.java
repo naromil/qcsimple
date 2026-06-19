@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple;
+package io.github.naromil.qcsimple.editor;
 
 import net.querz.nbt.tag.CompoundTag;
 

@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple;
+package io.github.naromil.qcsimple.data;
 
 import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.io.NamedTag;

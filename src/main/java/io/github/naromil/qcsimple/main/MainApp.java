@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple;
+package io.github.naromil.qcsimple.main;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -23,13 +23,13 @@ public class MainApp extends Application {
         double calculatedHeight = screenHeight * (640.0 / 1080.0);
 
         // 3. Load the FXML layout file
-        FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("main-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("/io/github/naromil/qcsimple/main-view.fxml"));
 
         // 4. Pass the dynamically calculated width and height to the Scene
         Scene scene = new Scene(fxmlLoader.load(), calculatedWidth, calculatedHeight);
 
         stage.setTitle("Quarterchunk Simple");
-        stage.getIcons().add(new javafx.scene.image.Image(Objects.requireNonNull(MainApp.class.getResourceAsStream("icon.png"))));
+        stage.getIcons().add(new javafx.scene.image.Image(Objects.requireNonNull(MainApp.class.getResourceAsStream("/io/github/naromil/qcsimple/icon.png"))));
         stage.setScene(scene);
         stage.show(); // Makes the window visible
     }
