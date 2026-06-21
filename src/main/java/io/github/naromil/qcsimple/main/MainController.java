@@ -1,179 +1,122 @@
 package io.github.naromil.qcsimple.main;
 
-import io.github.naromil.qcsimple.data.QCUnit;
+import io.github.naromil.qcsimple.editor.EditorCanvasController;
 import io.github.naromil.qcsimple.editor.EditorState;
 import io.github.naromil.qcsimple.data.NBTHandler;
-import io.github.naromil.qcsimple.editor.Point2D;
 import javafx.fxml.FXML;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
 
 public class MainController {
+
+    // JavaFX automatically links this variable to the embedded Canvas Controller
+    // The naming convention MUST exactly be: [fx:id] + "Controller"
     @FXML
-    protected TextField blocFramework, blocColumn, blocRow;
-
-    @FXML
-    private Canvas editorCanvas;
-
-    private GraphicsContext gc;
-
-    private final int cellSize = 32, gridWidth = 32, gridHeight = 32;
-
-    // 1. Updated: The Map now holds your abstract QCUnit objects
-    private Map<Point2D, QCUnit> currentLayerData = new HashMap<>();
+    private EditorCanvasController editorComponentController;
 
     @FXML
     public void initialize() {
-        gc = editorCanvas.getGraphicsContext2D();
-
-        editorCanvas.setWidth(gridWidth * cellSize);
-        editorCanvas.setHeight(gridHeight * cellSize);
-
-        setupMouseEvents();
-        redraw();
+        // Initialize the sub-canvas with the default Layer 1 empty map on boot
+        syncCanvasWithCurrentLayer();
+        // Now you can orchestrate the canvas from the main controller
+        System.out.println("Main layout loaded, canvas controller linked successfully.");
     }
 
-    private void setupMouseEvents() {
-        editorCanvas.setOnMousePressed(this::handleMouseInput);
-        editorCanvas.setOnMouseDragged(this::handleMouseInput);
-    }
-
-    private void handleMouseInput(MouseEvent event) {
-        int gridX = (int) (event.getX() / cellSize);
-        int gridZ = (int) (event.getY() / cellSize);
-
-        if (gridX >= 0 && gridX < gridWidth && gridZ >= 0 && gridZ < gridHeight) {
-
-            Point2D clickedPoint = new Point2D(gridX, gridZ);
-
-            if (event.isSecondaryButtonDown()) {
-                // 2. Updated: Place a fresh QCUnit into the map
-                // We use put() so dragging over an existing block simply overwrites/updates it
-                currentLayerData.put(clickedPoint, new QCUnit());
-            } else if (event.isPrimaryButtonDown()) {
-                currentLayerData.remove(clickedPoint);
-            } else if (event.getButton() == MouseButton.MIDDLE && event.getEventType() == MouseEvent.MOUSE_PRESSED) {
-                // Only trigger wall logic on the initial click, not while dragging
-                handleWallPlacement(event.getX(), event.getY(), gridX, gridZ);
+    /**
+     * Call this from your MainApp class right after loading the scene to capture global shortcuts!
+     */
+    public void setupGlobalShortcuts(javafx.scene.Scene scene) {
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            switch (event.getCode()) {
+                case PAGE_UP -> {
+                    onLayerUpAction();
+                    event.consume();
+                }
+                case PAGE_DOWN -> {
+                    onLayerDownAction();
+                    event.consume();
+                }
             }
-
-            redraw();
-        }
+        });
     }
 
-    private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ) {
-        // 1. Get the exact coordinates inside the specific cell (values between 0.0 and 31.99)
-        double localX = mouseX % cellSize;
-        double localZ = mouseY % cellSize;
+    @FXML
+    private Label layerLabel;
 
-        // 2. Calculate distance to all four edges
-        double distN = localZ;
-        double distS = cellSize - localZ;
-        double distW = localX;
-        double distE = cellSize - localX;
+    @FXML
+    protected void onLayerUpAction() {
+        changeLayer(1);
+    }
 
-        // Find the absolute closest edge
-        double min = Math.min(Math.min(distN, distS), Math.min(distW, distE));
-
-        // 3. Ensure a block exists here to attach a wall to (or create a blank one)
-        QCUnit centerUnit = currentLayerData.computeIfAbsent(new Point2D(gridX, gridZ), k -> new QCUnit());
-
-        // 4. Toggle the corresponding wall and sync the neighbor
-        if (min == distN) {
-            boolean newState = centerUnit.toggleWallN();
-            syncNeighborWall(gridX, gridZ - 1, newState, "SOUTH");
-        }
-        else if (min == distS) {
-            boolean newState = centerUnit.toggleWallS();
-            syncNeighborWall(gridX, gridZ + 1, newState, "NORTH");
-        }
-        else if (min == distW) {
-            boolean newState = centerUnit.toggleWallW();
-            syncNeighborWall(gridX - 1, gridZ, newState, "EAST");
-        }
-        else if (min == distE) {
-            boolean newState = centerUnit.toggleWallE();
-            syncNeighborWall(gridX + 1, gridZ, newState, "WEST");
+    @FXML
+    protected void onLayerDownAction() {
+        // Prevent dropping into negative or zero layer indices if you want strict positive limits
+        if (EditorState.getInstance().getCurrentLayerIndex() > 1) {
+            changeLayer(-1);
         }
     }
 
-    private void syncNeighborWall(int neighborX, int neighborZ, boolean wallState, String edgeToUpdate) {
-        // Don't draw outside the bounds of the map
-        if (neighborX < 0 || neighborX >= gridWidth || neighborZ < 0 || neighborZ >= gridHeight) return;
+    private void changeLayer(int offset) {
+        EditorState state = EditorState.getInstance();
+        int newLayer = state.getCurrentLayerIndex() + offset;
 
-        // Ensure the neighbor exists in memory
-        Point2D neighborPoint = new Point2D(neighborX, neighborZ);
-        QCUnit neighborUnit = currentLayerData.computeIfAbsent(neighborPoint, k -> new QCUnit());
+        // 1. Commit new depth level to memory
+        state.setCurrentLayerIndex(newLayer);
 
-        // Apply the inverse wall to the neighbor
-        switch (edgeToUpdate) {
-            case "NORTH" -> neighborUnit.setWallN(wallState);
-            case "SOUTH" -> neighborUnit.setWallS(wallState);
-            case "WEST"  -> neighborUnit.setWallW(wallState);
-            case "EAST"  -> neighborUnit.setWallE(wallState);
-        }
+        // 2. Update ToolBar Interface label text
+        layerLabel.setText("Layer: " + newLayer);
+
+        // 3. Hot-swap the rendering target array context
+        syncCanvasWithCurrentLayer();
     }
 
-    private void redraw() {
-        gc.clearRect(0, 0, editorCanvas.getWidth(), editorCanvas.getHeight());
+    private void syncCanvasWithCurrentLayer() {
+        EditorState state = EditorState.getInstance();
+        int activeLayer = state.getCurrentLayerIndex();
 
-        // 3. Updated: Draw the abstract QCUnits
-        for (Map.Entry<Point2D, QCUnit> entry : currentLayerData.entrySet()) {
-            Point2D pos = entry.getKey();
-            QCUnit unit = entry.getValue();
+        // Fetch the unique 2D grid pointer belonging to this level and force paint
+        editorComponentController.loadLayerData(state.getMapForLayer(activeLayer));
+    }
 
-            double startX = pos.x() * cellSize;
-            double startZ = pos.z() * cellSize;
+    @FXML
+    protected void onOpenConfigMenuAction() {
+        try {
+            // 1. Load the Configuration Window layout
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("block-config.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
 
-            // --- DRAW BASE BLOCK ---
-            gc.setFill(Color.web("#5b5b5b"));
-            gc.fillRect(startX, startZ, cellSize, cellSize);
-            gc.setFill(Color.web("#757575"));
-            gc.fillRect(startX + 2, startZ + 2, cellSize - 4, cellSize - 4);
+            // 2. Create a totally fresh operating system Stage
+            Stage configStage = new Stage();
+            configStage.setTitle("Configure Block IDs");
+            configStage.setScene(scene);
 
-            // --- DRAW WALLS ---
-            gc.setStroke(Color.web("#222222")); // Dark, thick color for walls
-            gc.setLineWidth(4.0); // Thick lines so they are highly visible
+            // 3. Set Window Modality (Crucial for settings dialogs)
+            // This prevents clicking or breaking anything in the background main editor canvas
+            Stage mainStage = (Stage) Stage.getWindows().stream().filter(Window::isShowing).findFirst().orElse(null);
+            configStage.initModality(Modality.WINDOW_MODAL);
+            configStage.initOwner(mainStage);
 
-            if (unit.hasWallN()) {
-                gc.strokeLine(startX, startZ, startX + cellSize, startZ);
-            }
-            if (unit.hasWallS()) {
-                gc.strokeLine(startX, startZ + cellSize, startX + cellSize, startZ + cellSize);
-            }
-            if (unit.hasWallW()) {
-                gc.strokeLine(startX, startZ, startX, startZ + cellSize);
-            }
-            if (unit.hasWallE()) {
-                gc.strokeLine(startX + cellSize, startZ, startX + cellSize, startZ + cellSize);
-            }
-        }
+            // Prevent user resizing if you want a fixed form layout look
+            configStage.setResizable(false);
 
-        // Draw the Grid Lines
-        gc.setStroke(Color.LIGHTGRAY);
-        gc.setLineWidth(1.0);
+            // 4. Fire open the window!
+            configStage.showAndWait();
 
-        for (int x = 0; x <= gridWidth; x++) {
-            double pixelX = x * cellSize;
-            gc.strokeLine(pixelX, 0, pixelX, editorCanvas.getHeight());
-        }
-
-        for (int z = 0; z <= gridHeight; z++) {
-            double pixelZ = z * cellSize;
-            gc.strokeLine(0, pixelZ, editorCanvas.getWidth(), pixelZ);
+        } catch (IOException e) {
+            System.err.println("Failed to load block configuration window: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

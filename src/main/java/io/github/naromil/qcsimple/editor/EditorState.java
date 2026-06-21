@@ -1,8 +1,11 @@
 package io.github.naromil.qcsimple.editor;
 
+import io.github.naromil.qcsimple.data.QCUnit;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class EditorState {
@@ -12,11 +15,27 @@ public class EditorState {
     private CompoundTag rootCompoundTag = null; // Replace 'Object' with your NBT library's Tag type (e.g., CompoundTag)
     private boolean isDirty = false;       // Tracks if there are unsaved changes
 
+    // Multi-layer structure tracking: Y-level -> (XZ coordinates -> Block)
+    private final Map<Integer, Map<Point2D, QCUnit>> layers = new HashMap<>();
+    private int currentLayer = 1; // Default initial layer to 1
+
     private EditorState() {}
 
     public static EditorState getInstance() {
         return instance;
     }
+
+    /**
+     * Gets the 2D coordinate map for the requested layer.
+     * If the layer has never been modified, it lazily creates a blank map for it.
+     */
+    public Map<Point2D, QCUnit> getMapForLayer(int yLevel) {
+        return layers.computeIfAbsent(yLevel, k -> new HashMap<>());
+    }
+
+    // Layer Navigation Management
+    public int getCurrentLayerIndex() { return currentLayer; }
+    public void setCurrentLayerIndex(int layer) { this.currentLayer = layer; }
 
     // Getters and Setters
     public Optional<File> getCurrentFile() { return Optional.ofNullable(currentFile); }

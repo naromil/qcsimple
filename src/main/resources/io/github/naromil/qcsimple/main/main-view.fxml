@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 
+<?import javafx.scene.control.Button?>
 <BorderPane prefHeight="640.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.naromil.qcsimple.main.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
@@ -19,7 +20,10 @@
               <MenuItem onAction="#onSaveAsMenuAction" text="Save As..." />
             </items>
           </Menu>
-          <Menu mnemonicParsing="false" text="Edit" />
+          <Menu mnemonicParsing="false" text="Edit">
+               <items>
+                  <MenuItem mnemonicParsing="false" onAction="#onOpenConfigMenuAction" text="Configure Blocks..." />
+               </items></Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#showAboutDialog" text="About" />
@@ -29,15 +33,13 @@
       </MenuBar>
    </top>
    <bottom>
-      <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-         <items>
-            <TextField fx:id="blocFramework" prefHeight="26.0" prefWidth="120.0" promptText="Framework Block" />
-            <TextField fx:id="blocColumn" prefHeight="26.0" prefWidth="120.0" promptText="Column Block" />
-            <TextField fx:id="blocRow" prefHeight="26.0" prefWidth="120.0" promptText="Row Block" />
-         </items>
-      </ToolBar>
+       <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+           <Button text="▲ Layer Up" onAction="#onLayerUpAction"/>
+           <Label fx:id="layerLabel" text="Layer: 1" style="-fx-font-weight: bold; -fx-padding: 0 10 0 10;"/>
+           <Button text="▼ Layer Down" onAction="#onLayerDownAction"/>
+       </ToolBar>
    </bottom>
    <center>
-      <Canvas fx:id="editorCanvas" height="480.0" width="720.0" BorderPane.alignment="CENTER" />
+       <fx:include fx:id="editorComponent" source="editor-canvas.fxml" />
    </center>
 </BorderPane>

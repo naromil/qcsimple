@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<GridPane alignment="CENTER" hgap="10.0" vgap="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.naromil.qcsimple.main.BlockConfigController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Block ID Configuration" GridPane.columnIndex="0" GridPane.columnSpan="2" GridPane.rowIndex="0" />
+
+    <Label text="Framework Block ID:" GridPane.rowIndex="1" />
+    <TextField fx:id="blocFramework" promptText="minecraft:stone" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+   <Label layoutX="30.0" layoutY="66.0" text="Column Block ID:" GridPane.rowIndex="2" />
+   <TextField fx:id="blocColumn" promptText="minecraft:oak_log" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+   <Label text="Row Block ID:" GridPane.rowIndex="3" />
+   <TextField fx:id="blocRow" promptText="minecraft:cobblestone" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+   <Label text="Floor Block ID:" GridPane.rowIndex="4" />
+   <TextField fx:id="blocFloor" promptText="minecraft:oak_planks" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+    <HBox alignment="bottom_right" spacing="10" GridPane.columnIndex="3" GridPane.rowIndex="4">
+        <Button onAction="#onCancelAction" text="Cancel" />
+        <Button onAction="#onSaveAction" style="-fx-base: #28a745;" text="Save" />
+    </HBox>
+   <columnConstraints>
+      <ColumnConstraints prefWidth="150.0" />
+      <ColumnConstraints prefWidth="150.0" />
+      <ColumnConstraints prefWidth="150.0" />
+      <ColumnConstraints prefWidth="150.0" />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints />
+      <RowConstraints prefHeight="30.0" />
+      <RowConstraints minHeight="10.0" prefHeight="30.0" />
+      <RowConstraints />
+   </rowConstraints>
+</GridPane>
