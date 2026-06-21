@@ -34,7 +34,8 @@ public class EditorCanvasController {
     }
 
     public void loadLayerData(Map<Point2D, QCUnit> mapForLayer) {
-        // TODO
+        currentLayerData = mapForLayer;
+        redraw();
     }
 
     private void setupMouseEvents() {
