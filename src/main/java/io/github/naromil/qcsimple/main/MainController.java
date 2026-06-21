@@ -8,7 +8,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -116,7 +115,7 @@ public class MainController {
 
         } catch (IOException e) {
             System.err.println("Failed to load block configuration window: " + e.getMessage());
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 
@@ -170,7 +169,7 @@ public class MainController {
                 // 4. Commit to the global State
                 EditorState state = EditorState.getInstance();
                 state.setCurrentFile(selectedFile);
-                state.setRootCompoundTag((CompoundTag) parsedNbt);
+                state.setRootCompoundTag(parsedNbt);
                 state.syncMap();
                 state.setDirty(false);
 

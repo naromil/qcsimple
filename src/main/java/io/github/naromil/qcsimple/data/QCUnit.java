@@ -14,12 +14,6 @@ public class QCUnit {
         wallE = newE;
     }
 
-    // Toggle methods (returns the new state so we can sync adjacent blocks)
-    public boolean toggleWallN() { return wallN = !wallN; }
-    public boolean toggleWallS() { return wallS = !wallS; }
-    public boolean toggleWallW() { return wallW = !wallW; }
-    public boolean toggleWallE() { return wallE = !wallE; }
-
     public void setWallN(boolean val) { wallN = val; }
     public void setWallS(boolean val) { wallS = val; }
     public void setWallW(boolean val) { wallW = val; }

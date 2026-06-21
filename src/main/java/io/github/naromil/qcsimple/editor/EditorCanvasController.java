@@ -52,17 +52,24 @@ public class EditorCanvasController {
             Point2D clickedPoint = new Point2D(gridX, gridZ);
 
             if (event.getButton() == MouseButton.PRIMARY) {
-                // Left Click: Erase block
-                currentLayerData.remove(clickedPoint);
+
+                if (event.isShiftDown()) {
+                    // Shift + Left Click: Erase wall placement
+                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false);
+
+                } else {
+                    // Left Click: Erase block
+                    currentLayerData.remove(clickedPoint);
+                }
 
             } else if (event.getButton() == MouseButton.SECONDARY) {
 
-                if (event.isShiftDown() && event.getEventType() == MouseEvent.MOUSE_PRESSED) {
-                    // Shift + Right Click: Trigger wall placement (only on initial press)
-                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ);
+                if (event.isShiftDown()) {
+                    // Shift + Right Click: Place wall placement
+                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true);
 
-                } else if (!event.isShiftDown()) {
-                    // Regular Right Click: Place block (blocks if Shift is held)
+                } else {
+                    // Regular Right Click: Place block
                     currentLayerData.put(clickedPoint, new QCUnit());
                 }
             }
@@ -71,58 +78,74 @@ public class EditorCanvasController {
         }
     }
 
-    private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ) {
-        // 1. Get the exact coordinates inside the specific cell (values between 0.0 and 31.99)
+    private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ, boolean newState) {
+        // 1. Local coordinates inside the cell
         double localX = mouseX % cellSize;
         double localZ = mouseY % cellSize;
 
-        // 2. Calculate distance to all four edges
+        // 2. Distance to edges
         double distN = localZ;
         double distS = cellSize - localZ;
         double distW = localX;
         double distE = cellSize - localX;
-
-        // Find the absolute closest edge
         double min = Math.min(Math.min(distN, distS), Math.min(distW, distE));
 
-        // 3. Ensure a block exists here to attach a wall to (or create a blank one)
-        QCUnit centerUnit = currentLayerData.computeIfAbsent(new Point2D(gridX, gridZ), k -> new QCUnit());
+        // 3. Get the existing block at the clicked cell – do NOT create one
+        QCUnit centerUnit = currentLayerData.get(new Point2D(gridX, gridZ));
+        if (centerUnit == null) {
+            return;   // no block here → cannot attach a wall
+        }
 
-        // 4. Toggle the corresponding wall and sync the neighbor
-        if (min == distN) {
-            boolean newState = centerUnit.toggleWallN();
-            syncNeighborWall(gridX, gridZ - 1, newState, "SOUTH");
+        // 4. For each edge that the click targets, toggle only if the neighbour exists
+        if (min > cellSize / 4.0 || min == distN) {
+            tryToggleWall(centerUnit, gridX, gridZ - 1, newState, Direction.NORTH);
         }
-        else if (min == distS) {
-            boolean newState = centerUnit.toggleWallS();
-            syncNeighborWall(gridX, gridZ + 1, newState, "NORTH");
+        if (min > cellSize / 4.0 || min == distS) {
+            tryToggleWall(centerUnit, gridX, gridZ + 1, newState, Direction.SOUTH);
         }
-        else if (min == distW) {
-            boolean newState = centerUnit.toggleWallW();
-            syncNeighborWall(gridX - 1, gridZ, newState, "EAST");
+        if (min > cellSize / 4.0 || min == distW) {
+            tryToggleWall(centerUnit, gridX - 1, gridZ, newState, Direction.WEST);
         }
-        else if (min == distE) {
-            boolean newState = centerUnit.toggleWallE();
-            syncNeighborWall(gridX + 1, gridZ, newState, "WEST");
+        if (min > cellSize / 4.0 || min == distE) {
+            tryToggleWall(centerUnit, gridX + 1, gridZ, newState, Direction.EAST);
         }
     }
 
-    private void syncNeighborWall(int neighborX, int neighborZ, boolean wallState, String edgeToUpdate) {
-        // Don't draw outside the bounds of the map
-        if (neighborX < 0 || neighborX >= gridWidth || neighborZ < 0 || neighborZ >= gridHeight) return;
+    /**
+     * Attempts to toggle a shared wall between centerUnit and the neighbor at (nx, nz).
+     * Does nothing if the neighbor block is missing or out of bounds.
+     */
+    private void tryToggleWall(QCUnit centerUnit, int nx, int nz, boolean wallState, Direction dir) {
+        // Bounds check
+        if (nx < 0 || nx >= gridWidth || nz < 0 || nz >= gridHeight) {
+            return;
+        }
 
-        // Ensure the neighbor exists in memory
-        Point2D neighborPoint = new Point2D(neighborX, neighborZ);
-        QCUnit neighborUnit = currentLayerData.computeIfAbsent(neighborPoint, k -> new QCUnit());
+        // Get neighbor without creating
+        QCUnit neighbour = currentLayerData.get(new Point2D(nx, nz));
+        if (neighbour == null) {
+            return;   // no block to share the wall with
+        }
 
-        // Apply the inverse wall to the neighbor
-        switch (edgeToUpdate) {
-            case "NORTH" -> neighborUnit.setWallN(wallState);
-            case "SOUTH" -> neighborUnit.setWallS(wallState);
-            case "WEST"  -> neighborUnit.setWallW(wallState);
-            case "EAST"  -> neighborUnit.setWallE(wallState);
+        // Toggle on the center cell
+        switch (dir) {
+            case NORTH -> centerUnit.setWallN(wallState);
+            case SOUTH -> centerUnit.setWallS(wallState);
+            case WEST  -> centerUnit.setWallW(wallState);
+            case EAST  -> centerUnit.setWallE(wallState);
+        }
+
+        // Toggle the inverse on the neighbor
+        switch (dir) {
+            case NORTH -> neighbour.setWallS(wallState);
+            case SOUTH -> neighbour.setWallN(wallState);
+            case WEST  -> neighbour.setWallE(wallState);
+            case EAST  -> neighbour.setWallW(wallState);
         }
     }
+
+    // Add a simple enum for readability (optional)
+    private enum Direction { NORTH, SOUTH, WEST, EAST }
 
     public void redraw() {
         gc.clearRect(0, 0, editorCanvas.getWidth(), editorCanvas.getHeight());

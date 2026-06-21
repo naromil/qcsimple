@@ -2,7 +2,6 @@ package io.github.naromil.qcsimple.editor;
 
 import io.github.naromil.qcsimple.data.DataConverter;
 import io.github.naromil.qcsimple.data.QCUnit;
-import io.github.naromil.qcsimple.main.BlockConfigController;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
