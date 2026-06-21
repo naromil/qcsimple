@@ -1,5 +1,6 @@
 package io.github.naromil.qcsimple.main;
 
+import io.github.naromil.qcsimple.data.DataConverter;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -10,17 +11,23 @@ public class BlockConfigController {
 
     @FXML
     public void initialize() {
-        // Here you can populate fields from your EditorState configuration on load
-        // e.g., baseBlockIdField.setText(EditorState.getInstance().getBaseBlockId());
+        // 1. Load data from DataConverter into the UI
+        // We use a fallback ternary operator just in case a field is somehow null
+        blocFramework.setText(DataConverter.frameworkId != null ? DataConverter.frameworkId : "");
+        blocColumn.setText(DataConverter.columnId != null ? DataConverter.columnId : "");
+        blocRow.setText(DataConverter.rowId != null ? DataConverter.rowId : "");
+        blocFloor.setText(DataConverter.floorId != null ? DataConverter.floorId : "");
     }
 
     @FXML
     protected void onSaveAction() {
-        String enteredId = blocFramework.getText();
-        System.out.println("Saved Block ID mapping: " + enteredId);
+        // 2. Push data from the UI back into the DataConverter
+        DataConverter.frameworkId = blocFramework.getText().trim();
+        DataConverter.columnId = blocColumn.getText().trim();
+        DataConverter.rowId = blocRow.getText().trim();
+        DataConverter.floorId = blocFloor.getText().trim();
 
-        // TODO: Save this mapping to your EditorState configuration here
-
+        System.out.println("Saved Block ID mappings successfully.");
         closeWindow();
     }
 

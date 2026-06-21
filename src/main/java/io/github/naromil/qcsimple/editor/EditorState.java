@@ -1,6 +1,8 @@
 package io.github.naromil.qcsimple.editor;
 
+import io.github.naromil.qcsimple.data.DataConverter;
 import io.github.naromil.qcsimple.data.QCUnit;
+import io.github.naromil.qcsimple.main.BlockConfigController;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
@@ -16,7 +18,7 @@ public class EditorState {
     private boolean isDirty = false;       // Tracks if there are unsaved changes
 
     // Multi-layer structure tracking: Y-level -> (XZ coordinates -> Block)
-    private final Map<Integer, Map<Point2D, QCUnit>> layers = new HashMap<>();
+    private Map<Integer, Map<Point2D, QCUnit>> layers = new HashMap<>();
     private int currentLayer = 1; // Default initial layer to 1
 
     private EditorState() {}
@@ -24,6 +26,27 @@ public class EditorState {
     public static EditorState getInstance() {
         return instance;
     }
+
+    // Getters and Setters
+    public Optional<File> getCurrentFile() { return Optional.ofNullable(currentFile); }
+    public void setCurrentFile(File file) { this.currentFile = file; }
+
+    public CompoundTag getRootCompoundTag() { return rootCompoundTag; }
+    public void setRootCompoundTag(CompoundTag tag) {
+        this.rootCompoundTag = tag;
+        this.isDirty = true;
+    }
+
+    // Synchronize root compound tag with layers
+    public void syncRootCompoundTag() {
+        rootCompoundTag = DataConverter.mapToTag(layers);
+    }
+    public void syncMap() {
+        layers = DataConverter.tagToMap(rootCompoundTag);
+    }
+
+    public boolean isDirty() { return isDirty; }
+    public void setDirty(boolean dirty) { this.isDirty = dirty; }
 
     /**
      * Gets the 2D coordinate map for the requested layer.
@@ -36,17 +59,4 @@ public class EditorState {
     // Layer Navigation Management
     public int getCurrentLayerIndex() { return currentLayer; }
     public void setCurrentLayerIndex(int layer) { this.currentLayer = layer; }
-
-    // Getters and Setters
-    public Optional<File> getCurrentFile() { return Optional.ofNullable(currentFile); }
-    public void setCurrentFile(File file) { this.currentFile = file; }
-
-    public CompoundTag getRootCompoundTag() { return rootCompoundTag; }
-    public void setRootCompoundTag(CompoundTag tag) {
-        this.rootCompoundTag = tag;
-        this.isDirty = true;
-    }
-
-    public boolean isDirty() { return isDirty; }
-    public void setDirty(boolean dirty) { this.isDirty = dirty; }
 }

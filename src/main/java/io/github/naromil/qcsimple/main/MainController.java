@@ -171,11 +171,12 @@ public class MainController {
                 EditorState state = EditorState.getInstance();
                 state.setCurrentFile(selectedFile);
                 state.setRootCompoundTag((CompoundTag) parsedNbt);
+                state.syncMap();
                 state.setDirty(false);
 
                 System.out.println("Successfully loaded: " + selectedFile.getName());
 
-                // TODO: Trigger your 3D Renderer to clear and rebuild its voxel mesh here!
+                editorComponentController.redraw();
 
             } catch (Exception e) {
                 showErrorDialog("Failed to open File", "An error occurred while parsing the NBT file:\n" + e.getMessage());
@@ -199,6 +200,7 @@ public class MainController {
         if (state.getCurrentFile().isEmpty()) {
             onSaveAsMenuAction();
         } else {
+            state.syncRootCompoundTag();
             saveNbtToFile(state.getCurrentFile().get());
         }
     }
@@ -206,6 +208,7 @@ public class MainController {
     @FXML
     protected void onSaveAsMenuAction() {
         EditorState state = EditorState.getInstance();
+        state.syncRootCompoundTag();
         if (state.getRootCompoundTag() == null) {
             showErrorDialog("Save Error", "No structure data found in memory to save.");
             return;

@@ -124,7 +124,7 @@ public class EditorCanvasController {
         }
     }
 
-    private void redraw() {
+    public void redraw() {
         gc.clearRect(0, 0, editorCanvas.getWidth(), editorCanvas.getHeight());
 
         // 3. Updated: Draw the abstract QCUnits
