@@ -74,6 +74,8 @@ public class EditorCanvasController {
                 }
             }
 
+            EditorState state = EditorState.getInstance();
+            state.setDirty(true);
             redraw();
         }
     }

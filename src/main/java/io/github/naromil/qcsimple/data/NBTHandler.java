@@ -4,7 +4,9 @@ import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
 
 public class NBTHandler {
 
@@ -21,14 +23,31 @@ public class NBTHandler {
         }
     }
 
-    /**
-     * Serializes a CompoundTag back down into a GZIP-compressed binary NBT file.
-     */
-    public static void writeNbt(CompoundTag compoundTag, File file) throws IOException {
-        // Minecraft structure files traditionally leave the internal root tag name blank ("")
-        NamedTag namedTag = new NamedTag("", compoundTag);
+    public static void write(CompoundTag nbtData, File file) {
+        // The Root must be wrapped in a NamedTag with an empty string.
+        NamedTag rootTag = new NamedTag("", nbtData);
+        try {
+            NBTUtil.write(rootTag, file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
-        // NBTUtil.write compresses via GZIP by default
-        NBTUtil.write(namedTag, file);
+        // TODO: Fix the problem that the GZIP stream doesn't end inside NBTUtil
+//        // 1. Manually open the file and wrap it in a GZIP stream.
+//        // The try-with-resources block () ensures these streams are ALWAYS closed.
+//        try (FileOutputStream fos = new FileOutputStream(file);
+//             GZIPOutputStream gzipOut = new GZIPOutputStream(fos)) {
+//
+//            // 2. Pass the STREAM to NBTUtil, and set compression to FALSE.
+//            // NBTUtil writes raw bytes, and our gzipOut handles the compression safely.
+//            NBTUtil.write(rootTag, gzipOut.toString(), false);
+//
+//            // 3. Explicitly tell the GZIP stream to write its trailer and flush.
+//            gzipOut.finish();
+//            gzipOut.flush();
+//        } catch(Exception e) {
+//            throw new RuntimeException(e);
+////            e.printStackTrace(); // Keep this on while debugging!
+//        }
     }
 }

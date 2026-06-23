@@ -13,10 +13,14 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import net.querz.nbt.io.NBTUtil;
+import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
 
 public class MainController {
 
@@ -199,7 +203,6 @@ public class MainController {
         if (state.getCurrentFile().isEmpty()) {
             onSaveAsMenuAction();
         } else {
-            state.syncRootCompoundTag();
             saveNbtToFile(state.getCurrentFile().get());
         }
     }
@@ -207,9 +210,8 @@ public class MainController {
     @FXML
     protected void onSaveAsMenuAction() {
         EditorState state = EditorState.getInstance();
-        state.syncRootCompoundTag();
-        if (state.getRootCompoundTag() == null) {
-            showErrorDialog("Save Error", "No structure data found in memory to save.");
+        if (!state.isDirty()) {
+//            showErrorDialog("Save Error", "No structure data found in memory to save.");
             return;
         }
 
@@ -231,10 +233,10 @@ public class MainController {
     private void saveNbtToFile(File file) {
         try {
             EditorState state = EditorState.getInstance();
+            state.syncRootCompoundTag();
             CompoundTag nbtData = state.getRootCompoundTag();
 
-            // 5. Serialize the memory object back to binary GZIP/NBT structure bytes
-            NBTHandler.writeNbt(nbtData, file);
+            NBTHandler.write(nbtData, file);
 
             // Update state info
             state.setCurrentFile(file);
@@ -242,6 +244,7 @@ public class MainController {
             System.out.println("Successfully saved data to: " + file.getAbsolutePath());
 
         } catch (Exception e) {
+//            e.printStackTrace(); // Keep this on while debugging!
             showErrorDialog("Save Failed", "Could not commit structure data to disk:\n" + e.getMessage());
         }
     }
