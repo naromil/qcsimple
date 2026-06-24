@@ -2,8 +2,6 @@ package io.github.naromil.qcsimple.data;
 
 import io.github.naromil.qcsimple.editor.Point2D;
 import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.IntTag;
-import net.querz.nbt.tag.ListTag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,10 +11,51 @@ import static java.lang.Math.min;
 
 public class DataConverter {
     // Defaulting to empty strings or basic Minecraft blocks
-    public static String frameworkId = "";
-    public static String columnId = "";
-    public static String rowId = "";
-    public static String floorId = "";
+    protected static String frameworkId = "";
+    protected static String columnId = "";
+    protected static String rowId = "";
+    protected static String floorId = "";
+    protected static String wallId = "";
+
+    // NBT File Paths (for the UI to remember)
+    protected static String innerWallPath = "";
+    protected static String outerWallPath = "";
+    protected static String innerColumnPath = "";
+    protected static String roofPath = "";
+
+    // Parsed NBT Data (for your actual structure compiler)
+    protected static CompoundTag innerWallTag = null;
+    protected static CompoundTag outerWallTag = null;
+    protected static CompoundTag innerColumnTag = null;
+    protected static CompoundTag roofTag = null;
+
+    public static boolean isConfigured() {
+        return innerWallPath != null && !innerWallPath.isEmpty() &&
+               outerWallPath != null && !outerWallPath.isEmpty() &&
+               innerColumnPath != null && !innerColumnPath.isEmpty() &&
+               roofPath != null && !roofPath.isEmpty();
+    }
+
+    // Apply default config conveniently for better testing
+    public static void applyDefaultConfig() {
+        // 1. Default String IDs: Balanced between Deepslate and Spruce
+        frameworkId = "minecraft:polished_deepslate"; // Sharp edges for framing
+        columnId    = "minecraft:spruce_log";         // Vertical pillars
+        rowId       = "minecraft:chiseled_deepslate";   // Horizontal structural rows
+        floorId     = "minecraft:spruce_planks";      // Clean, warm flooring
+        wallId      = "minecraft:deepslate_tiles"; // Solid backdrop walls
+
+        // 2. Clear default text indicators for the UI
+        innerWallPath   = "[Generated Default: Glass]";
+        outerWallPath   = "[Generated Default: Deepslate Bricks]";
+        innerColumnPath = "[Generated Default: Stripped Spruce Log]";
+        roofPath        = "[Not Configured]";
+
+        // 3. Default .nbt structure tags
+        innerWallTag   = NBTHandler.convertToStructureTag(7, 7, 1, "minecraft:glass");
+        outerWallTag   = NBTHandler.convertToStructureTag(7, 7, 1, "minecraft:deepslate_bricks");
+        innerColumnTag = NBTHandler.convertToStructureTag(1, 7, 1, "minecraft:stripped_spruce_log");
+    }
 
     // Main logic that converts a map of units into a map of blocks
     public static Map<Point3D, CompoundTag> convertToBlockMap(Map<Integer, Map<Point2D, QCUnit>> layers) {
@@ -28,100 +67,119 @@ public class DataConverter {
 
         Map<Point3D, CompoundTag> blockMap = new HashMap<Point3D, CompoundTag>();
 
+        // Process all single blocks
         for (Map.Entry<Integer, Map<Point2D, QCUnit>> layerEntry : layers.entrySet()) {
-            int dy = layerEntry.getKey() * 8;
+            int dy = layerEntry.getKey();
             for (Map.Entry<Point2D, QCUnit> pointEntry : layerEntry.getValue().entrySet()) {
-                int dx = pointEntry.getKey().x() * 8;
-                int dz = pointEntry.getKey().z() * 8;
-
-                for (int i = 0; i < 9; i++)  for (int j = 0; j < 9; j++) for (int k = 0; k < 9; k++) {
-                    // Count how many dimensions are on the outer boundaries (0 or 8)
+                int dx = pointEntry.getKey().x();
+                int dz = pointEntry.getKey().z();
+                for (int x = 0; x < 9; x++)  for (int y = 0; y < 9; y++) for (int z = 0; z < 9; z++) {
                     int boundaryCount = 0;
-                    if (i == 0 || i == 8) boundaryCount++;
-                    if (j == 0 || j == 8) boundaryCount++;
-                    if (k == 0 || k == 8) boundaryCount++;
+                    if (x == 0 || x == 8) boundaryCount++;
+                    if (y == 0 || y == 8) boundaryCount++;
+                    if (z == 0 || z == 8) boundaryCount++;
 
-                    // Edges require at least 2 dimensions to be on the boundary
-                    // (Note: corners have a count of 3, which are part of the framework)
-                    if (boundaryCount >= 2) {
-                        blockMap.put(new Point3D(dx + i, dy + j, dz + k), convertToBlockTag(frameworkId));
+                    int absoluteX = dx * 8 + x;
+                    int absoluteY = dy * 8 + y;
+                    int absoluteZ = dz * 8 + z;
+                    Point3D pos = new Point3D(absoluteX, absoluteY, absoluteZ);
+
+                    if (boundaryCount == 3) {
+                        blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
+
+                        // Framework extension
+                        for (int i = -2; i <= 2; ++i)
+                            blockMap.put(new Point3D(absoluteX + i, absoluteY, absoluteZ), NBTHandler.convertToBlockTag(frameworkId));
+                        for (int j = -2; j <= 2; ++j)
+                            blockMap.put(new Point3D(absoluteX, absoluteY + j, absoluteZ), NBTHandler.convertToBlockTag(frameworkId));
+                        for (int k = -2; k <= 2; ++k)
+                            blockMap.put(new Point3D(absoluteX, absoluteY, absoluteZ + k), NBTHandler.convertToBlockTag(frameworkId));
+
+                        // Outline transitions
+                        int xx = x == 0 ? -1 : 9;
+                        int yy = y == 0 ? -1 : 9;
+                        int zz = z == 0 ? -1 : 9;
+                        if (isValidPlacement(layers, x, yy, zz, dx, dy, dz))
+                            blockMap.put(new Point3D(absoluteX, dy * 8 + yy, dz * 8 + zz), NBTHandler.convertToBlockTag(frameworkId));
+                        if (isValidPlacement(layers, xx, y, zz, dx, dy, dz))
+                            blockMap.put(new Point3D(dx * 8 + xx, absoluteY, dz * 8 + zz), NBTHandler.convertToBlockTag(frameworkId));
+                        if (isValidPlacement(layers, xx, yy, z, dx, dy, dz))
+                            blockMap.put(new Point3D(dx * 8 + xx, dy * 8 + yy, absoluteZ), NBTHandler.convertToBlockTag(frameworkId));
+                    }
+                    else if (boundaryCount == 2) {
+                        blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
+
+                        // Rows and columns
+                        if (x == 0 || x == 8) {
+                            for(int bs = (y == 8 || y == 0) ? 1 : 2; bs > 0; bs--) {
+                                Point3D newPos = new Point3D(absoluteX + (x == 0 ? -bs : bs), absoluteY, absoluteZ);
+                                if(isValidPlacement(layers, x + (x == 0 ? -bs : bs), y, z, dx, dy, dz))
+                                    blockMap.put(newPos, NBTHandler.convertToBlockTag((y == 0 || y == 8) ? rowId : columnId));
+                            }
+                        }
+                        if (y == 0 || y == 8) {
+                            Point3D newPos = new Point3D(absoluteX, absoluteY + (y == 0 ? -1 : 1), absoluteZ);
+                            if(isValidPlacement(layers, x, y + (y == 0 ? -1 : 1), z, dx, dy, dz))
+                                blockMap.put(newPos, NBTHandler.convertToBlockTag(wallId));
+                        }
+                        if (z == 0 || z == 8) {
+                            for(int bs = (y == 8 || y == 0) ? 1 : 2; bs > 0; bs--) {
+                                Point3D newPos = new Point3D(absoluteX, absoluteY, absoluteZ + (z == 0 ? -bs : bs));
+                                if(isValidPlacement(layers, x, y, z + (z == 0 ? -bs : bs), dx, dy, dz))
+                                    blockMap.put(newPos, NBTHandler.convertToBlockTag((y == 0 || y == 8) ? rowId : columnId));
+                            }
+                        }
+                    }
+
+                    // Floor or Ceiling
+                    if((y == 0 || y == 8) && x > 0 && x < 8 && z > 0 && z < 8) {
+                        blockMap.put(pos, NBTHandler.convertToBlockTag(floorId));
                     }
                 }
             }
         }
-
+        
         return blockMap;
     }
 
-    private static CompoundTag convertToBlockTag(String blockId) {
-        // 1. Handle null, empty, or pure whitespace strings safely
-        if (blockId == null || blockId.isBlank()) {
-            blockId = "minecraft:stone";
-        }
-        // 2. Automatically append the default namespace if it's missing
-        else if (!blockId.contains(":")) {
-            blockId = "minecraft:" + blockId;
-        }
+    // Check if a relative position (x, y, z) in unit (dx, dy, dz) has another unit on it
+    private static boolean isValidPlacement(Map<Integer, Map<Point2D, QCUnit>> layers, int x, int y, int z, int dx, int dy, int dz) {
+        // 1. Shift the block offset coordinates if the internal coordinate spills past the 0-8 boundaries
+        if (x < 0) dx--;
+        else if (x > 8) dx++;
 
-        // 3. Create the CompoundTag, populate it, and RETURN it
-        CompoundTag tag = new CompoundTag();
-        tag.putString("Name", blockId);
+        if (y < 0) dy--;
+        else if (y > 8) dy++;
 
-        return tag; // Crucial: Fixes the missing return statement error
+        if (z < 0) dz--;
+        else if (z > 8) dz++;
+
+        // 2. Base check: Does the current root chunk exist?
+        boolean res = layersContains(layers, dx, dy, dz);
+
+        // 3. Boundary Neighbor Verification:
+        // If an internal coordinate sits exactly on an outer shell (0 or 8),
+        // ensure the adjacent chunk in that specific direction also exists.
+
+        // X-Boundaries
+        if (x == 0) res |= layersContains(layers, dx - 1, dy, dz);
+        if (x == 8) res |= layersContains(layers, dx + 1, dy, dz);
+
+        // Y-Boundaries
+        if (y == 0) res |= layersContains(layers, dx, dy - 1, dz);
+        if (y == 8) res |= layersContains(layers, dx, dy + 1, dz);
+
+        // Z-Boundaries
+        if (z == 0) res |= layersContains(layers, dx, dy, dz - 1);
+        if (z == 8) res |= layersContains(layers, dx, dy, dz + 1);
+
+        return !res;
     }
 
-    public static CompoundTag convertMapToTag(Map<Point3D, CompoundTag> blockMap) {
-        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
-        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
-        ListTag<CompoundTag> palette = new ListTag<>(CompoundTag.class);
-        ListTag<CompoundTag> blocks = new ListTag<>(CompoundTag.class);
-
-        for (Map.Entry<Point3D, CompoundTag> pointEntry : blockMap.entrySet()) {
-            int x = pointEntry.getKey().x();
-            int y = pointEntry.getKey().y();
-            int z = pointEntry.getKey().z();
-            minX = min(x, minX);
-            minY = min(y, minY);
-            minZ = min(z, minZ);
-            maxX = max(x, maxX);
-            maxY = max(y, maxY);
-            maxZ = max(z, maxZ);
-        }
-
-        System.out.printf("Bounding box: min(%d, %d, %d), max(%d, %d, %d)%n", minX, minY, minZ, maxX, maxY, maxZ);
-        ListTag<IntTag> size = new ListTag<>(IntTag.class);
-        size.add(new IntTag(maxX - minX + 1));
-        size.add(new IntTag(maxY - minY + 1));
-        size.add(new IntTag(maxZ - minZ + 1));
-        
-        for (Map.Entry<Point3D, CompoundTag> pointEntry : blockMap.entrySet()) {
-            int x = pointEntry.getKey().x();
-            int y = pointEntry.getKey().y();
-            int z = pointEntry.getKey().z();
-
-            CompoundTag blockTag = pointEntry.getValue();
-            if (!palette.contains(blockTag)) palette.add(blockTag);
-            int stateIndex = palette.indexOf(blockTag);
-
-            CompoundTag blockCompound = new CompoundTag();
-            ListTag<IntTag> pos = new ListTag<>(IntTag.class);
-            pos.add(new IntTag(x - minX));
-            pos.add(new IntTag(y - minY));
-            pos.add(new IntTag(z - minZ));
-            blockCompound.put("pos", pos);
-            blockCompound.putInt("state", stateIndex); // Map back to the palette
-            blocks.add(blockCompound);
-        }
-
-        // 4. Assemble Root
-        CompoundTag rootCompound = new CompoundTag();
-        rootCompound.putInt("DataVersion", 3465);
-        rootCompound.put("size", size);
-        rootCompound.put("palette", palette);
-        rootCompound.put("blocks", blocks);
-        rootCompound.put("entities", new ListTag<>(CompoundTag.class)); // Leave entities empty for now
-
-        return rootCompound;
+    // Check if the map of QCUnit contains a Unit at a position
+    private static boolean layersContains(Map<Integer, Map<Point2D, QCUnit>> layers, int dx, int dy, int dz) {
+        if(!layers.containsKey(dy)) return false;
+        return layers.get(dy).containsKey(new Point2D(dx, dz));
     }
 
     public static Map<Integer, Map<Point2D, QCUnit>> tagToMap(CompoundTag rootCompoundTag) {

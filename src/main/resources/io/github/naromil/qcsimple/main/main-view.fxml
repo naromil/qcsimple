@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
 
-<?import javafx.scene.control.Button?>
 <BorderPane prefHeight="640.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.naromil.qcsimple.main.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
@@ -23,6 +22,7 @@
           <Menu mnemonicParsing="false" text="Edit">
                <items>
                   <MenuItem mnemonicParsing="false" onAction="#onOpenConfigMenuAction" text="Configure Blocks..." />
+                  <MenuItem mnemonicParsing="false" onAction="#onApplyDefaultConfigAction" text="Apply Default Block Configuration" />
                </items></Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
@@ -34,9 +34,9 @@
    </top>
    <bottom>
        <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-           <Button text="▲ Layer Up" onAction="#onLayerUpAction"/>
-           <Label fx:id="layerLabel" text="Layer: 1" style="-fx-font-weight: bold; -fx-padding: 0 10 0 10;"/>
-           <Button text="▼ Layer Down" onAction="#onLayerDownAction"/>
+           <Button onAction="#onLayerUpAction" text="▲ Layer Up" />
+           <Label fx:id="layerLabel" style="-fx-font-weight: bold; -fx-padding: 0 10 0 10;" text="Layer: 1" />
+           <Button onAction="#onLayerDownAction" text="▼ Layer Down" />
        </ToolBar>
    </bottom>
    <center>

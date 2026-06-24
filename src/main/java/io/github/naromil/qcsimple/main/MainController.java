@@ -1,5 +1,7 @@
 package io.github.naromil.qcsimple.main;
 
+import io.github.naromil.qcsimple.data.BlockConfigController;
+import io.github.naromil.qcsimple.data.DataConverter;
 import io.github.naromil.qcsimple.editor.EditorCanvasController;
 import io.github.naromil.qcsimple.editor.EditorState;
 import io.github.naromil.qcsimple.data.NBTHandler;
@@ -13,14 +15,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import net.querz.nbt.io.NBTUtil;
-import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.zip.GZIPOutputStream;
 
 public class MainController {
 
@@ -121,6 +119,11 @@ public class MainController {
             System.err.println("Failed to load block configuration window: " + e.getMessage());
 //            e.printStackTrace();
         }
+    }
+
+    @FXML
+    protected void onApplyDefaultConfigAction() {
+        DataConverter.applyDefaultConfig();
     }
 
     /**
@@ -232,6 +235,12 @@ public class MainController {
 
     private void saveNbtToFile(File file) {
         try {
+            // If DataConverter is not configured, apply default config
+            if(!DataConverter.isConfigured()) {
+                System.out.println("DataConverter is not configured. Applying default config.");
+                DataConverter.applyDefaultConfig();
+            }
+
             EditorState state = EditorState.getInstance();
             state.syncRootCompoundTag();
             CompoundTag nbtData = state.getRootCompoundTag();
