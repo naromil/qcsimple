@@ -7,6 +7,13 @@ public class QCUnit {
         wallN = wallW = wallS = wallE = false;
     }
 
+    public QCUnit(QCUnit unit) {
+        wallN = unit.wallN;
+        wallW = unit.wallW;
+        wallS = unit.wallS;
+        wallE = unit.wallE;
+    }
+
     public QCUnit(Boolean newN, Boolean newW, Boolean newS, Boolean newE) {
         wallN = newN;
         wallW = newW;

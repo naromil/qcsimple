@@ -41,7 +41,11 @@ public class MainController {
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             switch (event.getCode()) {
                 case PAGE_UP -> {
-                    onLayerUpAction();
+                    if (event.isShiftDown()) {
+                        onLayerCopyUpAction();
+                    } else {
+                        onLayerUpAction();
+                    }
                     event.consume();
                 }
                 case PAGE_DOWN -> {
@@ -68,10 +72,13 @@ public class MainController {
         }
     }
 
-//    @FXML
-//    protected void onLayerCopyUpAction() {
-//        // TODO: Implement layer up action that also copies the current layer data to the new layer
-//    }
+    @FXML
+    protected void onLayerCopyUpAction() {
+        EditorState state = EditorState.getInstance();
+        state.duplicateLayerData(state.getCurrentLayerIndex());
+
+        changeLayer(1);
+    }
 
     private void changeLayer(int offset) {
         EditorState state = EditorState.getInstance();

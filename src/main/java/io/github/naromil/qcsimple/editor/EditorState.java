@@ -62,4 +62,17 @@ public class EditorState {
     // Layer Navigation Management
     public int getCurrentLayerIndex() { return currentLayer; }
     public void setCurrentLayerIndex(int layer) { this.currentLayer = layer; }
+
+    public void duplicateLayerData(int currentLayer) {
+        Map<Point2D, QCUnit> sourceLayer = getMapForLayer(currentLayer);
+
+        Map<Point2D, QCUnit> duplicatedLayer = new HashMap<>();
+
+        for (Map.Entry<Point2D, QCUnit> entry : sourceLayer.entrySet()) {
+            duplicatedLayer.put(entry.getKey(), new QCUnit(entry.getValue()));
+        }
+
+        layers.put(currentLayer + 1, duplicatedLayer);
+        setDirty(true);
+    }
 }

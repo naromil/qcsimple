@@ -7,6 +7,8 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.HBox?>
 
 <BorderPane prefHeight="640.0" prefWidth="960.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.naromil.qcsimple.main.MainController">
    <top>
@@ -37,6 +39,8 @@
            <Button onAction="#onLayerUpAction" text="▲ Layer Up" />
            <Label fx:id="layerLabel" style="-fx-font-weight: bold; -fx-padding: 0 10 0 10;" text="Layer: 1" />
            <Button onAction="#onLayerDownAction" text="▼ Layer Down" />
+         <Region prefHeight="10.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+         <Button layoutX="10.0" layoutY="12.0" onAction="#onLayerCopyUpAction" text="▲ Duplicate Layer Up" />
        </ToolBar>
    </bottom>
    <center>
