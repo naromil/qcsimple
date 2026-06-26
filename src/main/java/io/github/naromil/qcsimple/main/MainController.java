@@ -155,12 +155,12 @@ public class MainController {
         alert.setHeaderText("Minecraft Quarterchunk Simple v1.0");
         alert.setContentText(
                 """
-                        An interactive 3D editor for Minecraft Quarterchunk structure files in .nbt format.
+                        An interactive editor for Minecraft Quarterchunk Unit buildings in .nbt files.
                         
                         Features:
-                        • Source management panel
-                        • Interactive 3D voxel renderer
-                        • Structural rotation and editing tools"""
+                        • Interactive Multi-Layer Units Layout Editor
+                        • Modular Building Parts Customization
+                        • NBT Structure File Save and Open"""
         );
 
         // 3. Display the dialog and block user interaction with the main window until closed
