@@ -12,6 +12,7 @@ import java.util.Map;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+// TODO: Split the class into multiple files
 public class DataConverter {
     // Defaulting to empty strings or basic Minecraft blocks
     protected static String frameworkId = "";
