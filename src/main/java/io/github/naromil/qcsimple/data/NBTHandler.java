@@ -66,9 +66,9 @@ public class NBTHandler {
             int i = pos.get(0).asInt(), j = pos.get(1).asInt(), k = pos.get(2).asInt();
             Point3D rotatedPos = switch (rotation) {
                 case "0" -> new Point3D(i, j, k);
-                case "90" -> new Point3D(k, j, -i);
+                case "90" -> new Point3D(-k, j, i);
                 case "180" -> new Point3D(-i, j, -k);
-                case "270" -> new Point3D(-k, j, i);
+                case "270" -> new Point3D(k, j, -i);
                 default -> throw new IllegalStateException("Unexpected rotation value: " + rotation);
             };
 

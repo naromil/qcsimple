@@ -56,14 +56,18 @@ public class DataConverter {
         // 3. Default .nbt structure tags
         innerWallTag   = NBTHandler.convertToStructureTag(7, 7, 1, "minecraft:glass");
 
-        outerWallTag   = NBTHandler.convertToStructureTag(7, 7, 1, "minecraft:deepslate_bricks");
+        outerWallTag   = NBTHandler.convertToStructureTag(7, 7, 2, "minecraft:deepslate_bricks");
         // Customized carving for outer wall
         ListTag<CompoundTag> blocksList = outerWallTag.getListTag("blocks").asCompoundTagList();
         for (int i = blocksList.size() - 1; i >= 0; i--) {
             CompoundTag blockTag = blocksList.get(i);
-            int x = blockTag.getListTag("pos").asIntTagList().get(0).asInt(), y = blockTag.getListTag("pos").asIntTagList().get(1).asInt();
+            int x = blockTag.getListTag("pos").asIntTagList().get(0).asInt();
+            int y = blockTag.getListTag("pos").asIntTagList().get(1).asInt();
+            int z = blockTag.getListTag("pos").asIntTagList().get(2).asInt();
 
-            if (y < 4 && x > 1 && x < 6) {
+            if (z == 1 && y < 4 && x > 1 && x < 5) { // inner layer door removal
+                blocksList.remove(i);
+            } else if (z == 0 && !(x == 1 || x == 5) && !(y == 5)) { // outer layer door frame carving
                 blocksList.remove(i);
             }
         }
@@ -118,26 +122,41 @@ public class DataConverter {
                         blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
 
                         // Framework extension
-                        for (int i = -2; i <= 2; ++i)
-                            blockMap.put(new Point3D(absoluteX + i, absoluteY, absoluteZ), NBTHandler.convertToBlockTag(frameworkId));
-                        for (int j = -2; j <= 2; ++j)
-                            blockMap.put(new Point3D(absoluteX, absoluteY + j, absoluteZ), NBTHandler.convertToBlockTag(frameworkId));
-                        for (int k = -2; k <= 2; ++k)
-                            blockMap.put(new Point3D(absoluteX, absoluteY, absoluteZ + k), NBTHandler.convertToBlockTag(frameworkId));
-
+                        for (int i = -2; i <= 2; ++i) {
+                            Point3D point = new Point3D(absoluteX + i, absoluteY, absoluteZ);
+                            if (!blockMap.containsKey(point))
+                                blockMap.put(point, NBTHandler.convertToBlockTag(frameworkId));
+                        }
+                        for (int j = -2; j <= 2; ++j) {
+                            Point3D point = new Point3D(absoluteX, absoluteY + j, absoluteZ);
+                            if (!blockMap.containsKey(point))
+                                blockMap.put(point, NBTHandler.convertToBlockTag(frameworkId));
+                        }
+                        for (int k = -2; k <= 2; ++k) {
+                            Point3D point = new Point3D(absoluteX, absoluteY, absoluteZ + k);
+                            if (!blockMap.containsKey(point))
+                                blockMap.put(point, NBTHandler.convertToBlockTag(frameworkId));
+                        }
                         // Outline transitions
                         int xx = x == 0 ? -1 : 9;
                         int yy = y == 0 ? -1 : 9;
                         int zz = z == 0 ? -1 : 9;
-                        if (isValidPlacement(layers, x, yy, zz, dx, dy, dz))
-                            blockMap.put(new Point3D(absoluteX, dy * 8 + yy, dz * 8 + zz), NBTHandler.convertToBlockTag(frameworkId));
-                        if (isValidPlacement(layers, xx, y, zz, dx, dy, dz))
-                            blockMap.put(new Point3D(dx * 8 + xx, absoluteY, dz * 8 + zz), NBTHandler.convertToBlockTag(frameworkId));
-                        if (isValidPlacement(layers, xx, yy, z, dx, dy, dz))
-                            blockMap.put(new Point3D(dx * 8 + xx, dy * 8 + yy, absoluteZ), NBTHandler.convertToBlockTag(frameworkId));
+                        Point3D newPosX = new Point3D(absoluteX, dy * 8 + yy, dz * 8 + zz);
+                        Point3D newPosY = new Point3D(dx * 8 + xx, absoluteY, dz * 8 + zz);
+                        Point3D newPosZ = new Point3D(dx * 8 + xx, dy * 8 + yy, absoluteZ);
+
+                        if (isValidPlacement(layers, x, yy, zz, dx, dy, dz) && !blockMap.containsKey(newPosX)) {
+                            blockMap.put(newPosX, NBTHandler.convertToBlockTag(frameworkId));
+                        }
+                        if (isValidPlacement(layers, xx, y, zz, dx, dy, dz) && !blockMap.containsKey(newPosY)) {
+                            blockMap.put(newPosY, NBTHandler.convertToBlockTag(frameworkId));
+                        }
+                        if (isValidPlacement(layers, xx, yy, z, dx, dy, dz) && !blockMap.containsKey(newPosZ)) {
+                            blockMap.put(newPosZ, NBTHandler.convertToBlockTag(frameworkId));
+                        }
                     }
                     else if (boundaryCount == 2) {
-                        blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
+                        if(!blockMap.containsKey(pos)) blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
 
                         // Rows and columns
                         if (x == 0 || x == 8) {
@@ -205,7 +224,7 @@ public class DataConverter {
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8 + 8;
 
-                    NBTHandler.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ, innerColumnTag);
+                    NBTHandler.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ, innerWallTag);
                 }
 
                 // 3. Verify it can form an inner wall with the east unit
@@ -214,7 +233,7 @@ public class DataConverter {
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8;
 
-                    NBTHandler.putStructure(blockMap, intersectX, intersectY + 1, intersectZ + 1, innerColumnTag, "270");
+                    NBTHandler.putStructure(blockMap, intersectX, intersectY + 1, intersectZ + 1, innerWallTag, "90");
                 }
 
                 // 4. Process outer walls
