@@ -11,7 +11,7 @@ import javafx.scene.paint.Color;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EditorCanvasController {
+public class EditorController {
 
     @FXML
     private Canvas editorCanvas;

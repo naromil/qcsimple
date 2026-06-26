@@ -1,6 +1,5 @@
 package io.github.naromil.qcsimple.main;
 
-import io.github.naromil.qcsimple.editor.EditorCanvasController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

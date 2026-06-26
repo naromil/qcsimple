@@ -10,57 +10,8 @@ import java.util.Map;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-public class NBTHandler {
-
-    // Use blockId to generate an CompoundTag item inside palette
-    static CompoundTag convertToBlockTag(String blockId) {
-        // 1. Handle null, empty, or pure whitespace strings safely
-        if (blockId == null || blockId.isBlank()) {
-            blockId = "minecraft:stone";
-        }
-        // 2. Automatically append the default namespace if it's missing
-        else if (!blockId.contains(":")) {
-            blockId = "minecraft:" + blockId;
-        }
-
-        // 3. Create the CompoundTag, populate it, and RETURN it
-        CompoundTag tag = new CompoundTag();
-        tag.putString("Name", blockId);
-
-        return tag; // Crucial: Fixes the missing return statement error
-    }
-
-    // Use blockId and sizes to create a uniform cuboid structure CompoundTag
-    public static CompoundTag generateSimpleStructureTag(String[] blocks, byte[][][] map) {
-        if(map == null || map.length == 0 || map[0].length == 0 || map[0][0].length == 0) {
-            return null;
-        }
-        int x = map.length;
-        int y = map[0].length;
-        int z = map[0][0].length;
-
-        Map<Point3D, CompoundTag> blockMap = new HashMap<>();
-        for (int i = 0; i < x; i++) for(int j = 0; j < y; j++) for(int k = 0; k < z; k++) {
-            int index = map[i][j][k];
-            if(index < 0 || index >= blocks.length) continue;
-
-            CompoundTag blockId = convertToBlockTag(blocks[index]);
-            blockMap.put(new Point3D(i, j, k), blockId);
-        }
-        return convertMapToTag(blockMap);
-    }
-
-    public static CompoundTag generateSimpleStructureTag(String blockId, byte[][][] map) {
-        return generateSimpleStructureTag(new String[]{blockId}, map);
-    }
-
-    public static CompoundTag generateSimpleStructureTag(int x, int y, int z, String blockId) {
-        byte[][][] blocks = new byte[x][y][z];
-        for(int i=0; i<x; i++) for(int j=0; j<y; j++) for(int k=0; k<z; k++) {
-            blocks[i][j][k] = 0;
-        }
-        return generateSimpleStructureTag((String[]) new String[]{blockId}, blocks);
-    }
+// Operations involving Block Maps and NBT Tags
+public class BlockNBTConverter {
 
     // Put a structure tag in root compound form into a blockMap
     public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure, String rotation) throws IllegalStateException {
@@ -87,7 +38,7 @@ public class NBTHandler {
 
             // Grab the original state, rotate it (which safely clones it), and map it
             CompoundTag originalState = palette.get(stateIndex);
-            CompoundTag rotatedState = rotateBlockState(originalState, rotation);
+            CompoundTag rotatedState = RotationUtils.rotateBlockState(originalState, rotation);
 
             blockMap.put(absolutePos, rotatedState);
         }
@@ -95,67 +46,6 @@ public class NBTHandler {
 
     public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure) {
         putStructure(blockMap, x, y, z, structure, "0");
-    }
-
-    /**
-     * Deep clones a block state and updates directional properties based on rotation.
-     */
-    private static CompoundTag rotateBlockState(CompoundTag originalState, String rotation) {
-        if (rotation.equals("0") || !originalState.containsKey("Properties")) {
-            return originalState; // No rotation needed, or block has no directional states
-        }
-
-        // 1. Deep clone to prevent corrupting the global palette
-        CompoundTag newState = originalState.clone();
-        CompoundTag properties = newState.getCompoundTag("Properties");
-
-        // 2. Rotate Facing (Stairs, Chests, Furnaces, Torches)
-        if (properties.containsKey("facing")) {
-            String currentFacing = properties.getString("facing");
-            properties.putString("facing", rotateFacing(currentFacing, rotation));
-        }
-
-        // 3. Rotate Axis (Logs, Pillars, Basalt)
-        if (properties.containsKey("axis")) {
-            String currentAxis = properties.getString("axis");
-            // Axis only swaps between X and Z on 90 and 270 degree turns
-            if (rotation.equals("90") || rotation.equals("270")) {
-                if (currentAxis.equals("x")) properties.putString("axis", "z");
-                else if (currentAxis.equals("z")) properties.putString("axis", "x");
-            }
-        }
-
-        return newState;
-    }
-
-    /**
-     * Maps a cardinal direction string to its new direction after a Clockwise rotation.
-     */
-    private static String rotateFacing(String facing, String rotation) {
-        return switch (rotation) {
-            case "90" -> switch (facing) { // 90 Clockwise
-                case "north" -> "east";
-                case "east" -> "south";
-                case "south" -> "west";
-                case "west" -> "north";
-                default -> facing; // Ignores "up" and "down"
-            };
-            case "180" -> switch (facing) { // 180 Clockwise
-                case "north" -> "south";
-                case "east" -> "west";
-                case "south" -> "north";
-                case "west" -> "east";
-                default -> facing;
-            };
-            case "270" -> switch (facing) { // 270 Clockwise
-                case "north" -> "west";
-                case "east" -> "north";
-                case "south" -> "east";
-                case "west" -> "south";
-                default -> facing;
-            };
-            default -> facing;
-        };
     }
 
     // Convert generated blockMap into complete root CompoundTag ready for file IO
@@ -177,7 +67,7 @@ public class NBTHandler {
             maxZ = max(z, maxZ);
         }
 
-        System.out.printf("Bounding box: min(%d, %d, %d), max(%d, %d, %d)%n", minX, minY, minZ, maxX, maxY, maxZ);
+//        System.out.printf("Bounding box: min(%d, %d, %d), max(%d, %d, %d)%n", minX, minY, minZ, maxX, maxY, maxZ);
         ListTag<IntTag> size = new ListTag<>(IntTag.class);
         size.add(new IntTag(maxX - minX + 1));
         size.add(new IntTag(maxY - minY + 1));
@@ -213,7 +103,7 @@ public class NBTHandler {
         return rootCompound;
     }
 
-    public static CompoundTag extractStructureTagFromBlockMap(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z, String rotation) {
+    public static CompoundTag extractStructureFromBlockMap(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z, String rotation) {
         if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
 
         Map<Point3D, CompoundTag> extractedMap = new HashMap<>();
@@ -232,7 +122,7 @@ public class NBTHandler {
                     int rotatedY = absY - y;
                     int rotatedZ = absZ - z;
 
-                    Point3D originalPos = getUnrotatedPos(rotation, rotatedX, rotatedY, rotatedZ);
+                    Point3D originalPos = RotationUtils.getUnrotatedPos(rotation, rotatedX, rotatedY, rotatedZ);
                     extractedMap.put(originalPos, blockTag);
                 }
             }
@@ -240,16 +130,6 @@ public class NBTHandler {
 
         if (extractedMap.isEmpty()) return null;
         return convertMapToTag(extractedMap);
-    }
-
-    private static Point3D getUnrotatedPos(String rotation, int i, int j, int k) throws IllegalStateException {
-        return switch (rotation) {
-            case "0" -> new Point3D(i, j, k);
-            case "90" -> new Point3D(k, j, -i);
-            case "180" -> new Point3D(-i, j, -k);
-            case "270" -> new Point3D(-k, j, i);
-            default -> throw new IllegalStateException("Unexpected rotation value: " + rotation);
-        };
     }
 
     // Convert a CompoundTag representing a region file into a map of block positions to block-state CompoundTags.

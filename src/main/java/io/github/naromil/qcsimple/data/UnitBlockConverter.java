@@ -12,109 +12,7 @@ import java.util.Map;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
-// TODO: Split the class into multiple files
-public class DataConverter {
-    // Defaulting to empty strings or basic Minecraft blocks
-    protected static String frameworkId = "";
-    protected static String columnId = "";
-    protected static String rowId = "";
-    protected static String floorId = "";
-    protected static String wallId = "";
-
-    // NBT File Paths (for the UI to remember)
-    protected static String innerWallPath = "";
-    protected static String outerWallPath = "";
-    protected static String innerColumnPath = "";
-    protected static String roofPath = "";
-
-    // Parsed NBT Data (for your actual structure compiler)
-    protected static CompoundTag innerWallTag = null;
-    protected static CompoundTag outerWallTag = null;
-    protected static CompoundTag innerColumnTag = null;
-    protected static CompoundTag roofTag = null;
-
-    public static boolean isConfigured() {
-        return innerWallPath != null && !innerWallPath.isEmpty() &&
-                outerWallPath != null && !outerWallPath.isEmpty() &&
-                innerColumnPath != null && !innerColumnPath.isEmpty() &&
-                roofPath != null && !roofPath.isEmpty();
-    }
-
-    // Apply default config conveniently for better testing
-    public static void applyDefaultConfig() {
-        // 1. Default String IDs: Balanced between Deepslate and Spruce
-        frameworkId = "minecraft:polished_deepslate"; // Sharp edges for framing
-        columnId = "minecraft:spruce_log";         // Vertical pillars
-        rowId = "minecraft:chiseled_deepslate";   // Horizontal structural rows
-        floorId = "minecraft:spruce_planks";      // Clean, warm flooring
-        wallId = "minecraft:deepslate_tiles"; // Solid backdrop walls
-
-        // 2. Clear default text indicators for the UI
-        innerWallPath = "[Generated Default: Glass]";
-        outerWallPath = "[Generated Default: Deepslate Bricks]";
-        innerColumnPath = "[Generated Default: Stripped Spruce Log]";
-        roofPath = "[Not Configured]";
-
-        // 3. Default .nbt structure tags
-        innerWallTag = NBTHandler.generateSimpleStructureTag("minecraft:glass", new byte[][][]{
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}},
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}},
-                {{-1}, {-1}, {-1}, {-1}, {0}, {0}, {0}},
-                {{-1}, {-1}, {-1}, {-1}, {0}, {0}, {0}},
-                {{-1}, {-1}, {-1}, {-1}, {0}, {0}, {0}},
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}},
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}}
-        });
-
-        outerWallTag = NBTHandler.generateSimpleStructureTag("minecraft:deepslate_bricks", new byte[][][]{
-                {{-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}},
-                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}},
-        });
-
-        innerColumnTag = NBTHandler.generateSimpleStructureTag("minecraft:stripped_spruce_log", new byte[][][]{
-                {{-1, 0, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, 0, -1}},
-                {{0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {0, 0, 0}},
-                {{-1, 0, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, 0, -1}},
-        });
-    }
-
-    // 1. The persistent cache field
-    private static int[][][] boundaryCache = null;
-
-    // 2. The public lookup method that auto-computes when needed
-    public static int getBoundaryCount(int x, int y, int z) {
-        // Auto-compute on first use (Lazy Initialization)
-        if (boundaryCache == null) {
-            computeBoundaryCache();
-        }
-
-        // Return the cached value instantly
-        return boundaryCache[x][y][z];
-    }
-
-    // 3. Private helper to build the data structure
-    private static void computeBoundaryCache() {
-        System.out.println("Initializing boundary count cache..."); // Optional log
-        boundaryCache = new int[9][9][9];
-
-        for (int x = 0; x < 9; x++) {
-            for (int y = 0; y < 9; y++) {
-                for (int z = 0; z < 9; z++) {
-                    int count = 0;
-                    if (x == 0 || x == 8) count++;
-                    if (y == 0 || y == 8) count++;
-                    if (z == 0 || z == 8) count++;
-
-                    boundaryCache[x][y][z] = count;
-                }
-            }
-        }
-    }
+public class UnitBlockConverter {
 
     // Main logic that converts a map of units into a map of blocks
     public static Map<Point3D, CompoundTag> convertLayersToBlockMap(Map<Integer, Map<Point2D, QCUnit>> layers) {
@@ -144,24 +42,24 @@ public class DataConverter {
                             int absoluteZ = dz * 8 + z;
                             Point3D pos = new Point3D(absoluteX, absoluteY, absoluteZ);
 
-                            if (getBoundaryCount(x, y, z) == 3) {
-                                blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
+                            if (SpatialUtils.getBoundaryCount(x, y, z) == 3) {
+                                blockMap.put(pos, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId)); // Framework
 
                                 // 1.1. Framework extension
                                 for (int i = -2; i <= 2; ++i) {
                                     Point3D point = new Point3D(absoluteX + i, absoluteY, absoluteZ);
                                     if (!blockMap.containsKey(point))
-                                        blockMap.put(point, NBTHandler.convertToBlockTag(frameworkId));
+                                        blockMap.put(point, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId));
                                 }
                                 for (int j = -2; j <= 2; ++j) {
                                     Point3D point = new Point3D(absoluteX, absoluteY + j, absoluteZ);
                                     if (!blockMap.containsKey(point))
-                                        blockMap.put(point, NBTHandler.convertToBlockTag(frameworkId));
+                                        blockMap.put(point, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId));
                                 }
                                 for (int k = -2; k <= 2; ++k) {
                                     Point3D point = new Point3D(absoluteX, absoluteY, absoluteZ + k);
                                     if (!blockMap.containsKey(point))
-                                        blockMap.put(point, NBTHandler.convertToBlockTag(frameworkId));
+                                        blockMap.put(point, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId));
                                 }
                                 // 1.2. Outline transitions
                                 int xx = x == 0 ? -1 : 9;
@@ -171,37 +69,37 @@ public class DataConverter {
                                 Point3D newPosY = new Point3D(dx * 8 + xx, absoluteY, dz * 8 + zz);
                                 Point3D newPosZ = new Point3D(dx * 8 + xx, dy * 8 + yy, absoluteZ);
 
-                                if (isValidPlacement(layers, x, yy, zz, dx, dy, dz) && !blockMap.containsKey(newPosX)) {
-                                    blockMap.put(newPosX, NBTHandler.convertToBlockTag(frameworkId));
+                                if (SpatialUtils.isValidPlacement(layers, x, yy, zz, dx, dy, dz) && !blockMap.containsKey(newPosX)) {
+                                    blockMap.put(newPosX, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId));
                                 }
-                                if (isValidPlacement(layers, xx, y, zz, dx, dy, dz) && !blockMap.containsKey(newPosY)) {
-                                    blockMap.put(newPosY, NBTHandler.convertToBlockTag(frameworkId));
+                                if (SpatialUtils.isValidPlacement(layers, xx, y, zz, dx, dy, dz) && !blockMap.containsKey(newPosY)) {
+                                    blockMap.put(newPosY, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId));
                                 }
-                                if (isValidPlacement(layers, xx, yy, z, dx, dy, dz) && !blockMap.containsKey(newPosZ)) {
-                                    blockMap.put(newPosZ, NBTHandler.convertToBlockTag(frameworkId));
+                                if (SpatialUtils.isValidPlacement(layers, xx, yy, z, dx, dy, dz) && !blockMap.containsKey(newPosZ)) {
+                                    blockMap.put(newPosZ, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId));
                                 }
-                            } else if (getBoundaryCount(x, y, z) == 2) {
+                            } else if (SpatialUtils.getBoundaryCount(x, y, z) == 2) {
                                 if (!blockMap.containsKey(pos))
-                                    blockMap.put(pos, NBTHandler.convertToBlockTag(frameworkId)); // Framework
+                                    blockMap.put(pos, NBTGenerator.convertToBlockTag(BlockConfig.frameworkId)); // Framework
 
                                 // 1.3. Rows and columns
                                 if (x == 0 || x == 8) {
                                     for (int bs = (y == 8 || y == 0) ? 1 : 2; bs > 0; bs--) {
                                         Point3D newPos = new Point3D(absoluteX + (x == 0 ? -bs : bs), absoluteY, absoluteZ);
-                                        if (isValidPlacement(layers, x + (x == 0 ? -bs : bs), y, z, dx, dy, dz))
-                                            blockMap.put(newPos, NBTHandler.convertToBlockTag((y == 0 || y == 8) ? rowId : columnId));
+                                        if (SpatialUtils.isValidPlacement(layers, x + (x == 0 ? -bs : bs), y, z, dx, dy, dz))
+                                            blockMap.put(newPos, NBTGenerator.convertToBlockTag((y == 0 || y == 8) ? BlockConfig.rowId : BlockConfig.columnId));
                                     }
                                 }
                                 if (y == 0 || y == 8) {
                                     Point3D newPos = new Point3D(absoluteX, absoluteY + (y == 0 ? -1 : 1), absoluteZ);
-                                    if (isValidPlacement(layers, x, y + (y == 0 ? -1 : 1), z, dx, dy, dz))
-                                        blockMap.put(newPos, NBTHandler.convertToBlockTag(wallId));
+                                    if (SpatialUtils.isValidPlacement(layers, x, y + (y == 0 ? -1 : 1), z, dx, dy, dz))
+                                        blockMap.put(newPos, NBTGenerator.convertToBlockTag(BlockConfig.wallId));
                                 }
                                 if (z == 0 || z == 8) {
                                     for (int bs = (y == 8 || y == 0) ? 1 : 2; bs > 0; bs--) {
                                         Point3D newPos = new Point3D(absoluteX, absoluteY, absoluteZ + (z == 0 ? -bs : bs));
-                                        if (isValidPlacement(layers, x, y, z + (z == 0 ? -bs : bs), dx, dy, dz))
-                                            blockMap.put(newPos, NBTHandler.convertToBlockTag((y == 0 || y == 8) ? rowId : columnId));
+                                        if (SpatialUtils.isValidPlacement(layers, x, y, z + (z == 0 ? -bs : bs), dx, dy, dz))
+                                            blockMap.put(newPos, NBTGenerator.convertToBlockTag((y == 0 || y == 8) ? BlockConfig.rowId : BlockConfig.columnId));
                                     }
                                 }
 
@@ -211,24 +109,24 @@ public class DataConverter {
                                     int zbs = (z == 0) ? -1 : 1;
                                     Point3D newPos = new Point3D(absoluteX + xbs, absoluteY, absoluteZ + zbs);
 
-                                    if (!layersContains(layers, dx + xbs, dy, dz + zbs)
-                                        && !layersContains(layers, dx, dy, dz + zbs)
-                                        && !layersContains(layers, dx + xbs, dy, dz)) {
+                                    if (!SpatialUtils.layersContains(layers, dx + xbs, dy, dz + zbs)
+                                        && !SpatialUtils.layersContains(layers, dx, dy, dz + zbs)
+                                        && !SpatialUtils.layersContains(layers, dx + xbs, dy, dz)) {
 
-                                        blockMap.put(newPos, NBTHandler.convertToBlockTag(columnId));
+                                        blockMap.put(newPos, NBTGenerator.convertToBlockTag(BlockConfig.columnId));
                                     }
                                 }
                             }
 
                             // 1.5. Floor or Ceiling
                             if ((y == 0 || y == 8) && x > 0 && x < 8 && z > 0 && z < 8) {
-                                blockMap.put(pos, NBTHandler.convertToBlockTag(floorId));
+                                blockMap.put(pos, NBTGenerator.convertToBlockTag(BlockConfig.floorId));
                             }
                         }
 
                 // 2. Process roofs
-                if (layersContains(layers, dx, dy + 1, dz) && roofTag != null)
-                    NBTHandler.putStructure(blockMap, dx * 8, dy * 8 + 9, dz * 8, roofTag);
+                if (SpatialUtils.layersContains(layers, dx, dy + 1, dz) && BlockConfig.roofTag != null)
+                    BlockNBTConverter.putStructure(blockMap, dx * 8, dy * 8 + 9, dz * 8, BlockConfig.roofTag);
 
                 // We treat the current unit (dx, dz) as the North-West corner.
                 QCUnit uNW = currentUnit;
@@ -237,7 +135,7 @@ public class DataConverter {
                 QCUnit uSE = currentLayerMap.get(new Point2D(dx + 1, dz + 1));
 
                 // 3. Verify all 4 units exist to form a complete square for the inner column
-                if (innerColumnTag != null && uNE != null && uSW != null && uSE != null) {
+                if (BlockConfig.innerColumnTag != null && uNE != null && uSW != null && uSE != null) {
 
                     // 3.1. Check the internal cross for any conflicting walls
                     // (Adjust the method names if your QCUnit getters are named differently)
@@ -248,38 +146,38 @@ public class DataConverter {
                                     uSE.hasWallW() || uSE.hasWallN();
 
                     // 3.2. Place the column exactly at the intersection
-                    if (!hasConflictingWalls || innerWallTag == null) {
+                    if (!hasConflictingWalls || BlockConfig.innerWallTag == null) {
                         // The intersection point converges at x=8, z=8 of the NW unit
                         int intersectX = dx * 8 + 8;
                         int intersectY = dy * 8;
                         int intersectZ = dz * 8 + 8;
 
-                        NBTHandler.putStructure(blockMap, intersectX - 1, intersectY + 1, intersectZ - 1, innerColumnTag);
+                        BlockNBTConverter.putStructure(blockMap, intersectX - 1, intersectY + 1, intersectZ - 1, BlockConfig.innerColumnTag);
                     }
                 }
 
                 // 4.1. Verify it can form an inner wall with the south unit
-                if (innerWallTag != null && uSW != null && uSW.hasWallN() && uNW.hasWallS()) {
+                if (BlockConfig.innerWallTag != null && uSW != null && uSW.hasWallN() && uNW.hasWallS()) {
                     int intersectX = dx * 8;
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8 + 8;
 
-                    NBTHandler.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ, innerWallTag);
+                    BlockNBTConverter.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ, BlockConfig.innerWallTag);
                 }
 
                 // 4.2. Verify it can form an inner wall with the east unit
-                if (innerWallTag != null && uNE != null && uNE.hasWallW() && uNW.hasWallE()) {
+                if (BlockConfig.innerWallTag != null && uNE != null && uNE.hasWallW() && uNW.hasWallE()) {
                     int intersectX = dx * 8 + 8;
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8;
 
-                    NBTHandler.putStructure(blockMap, intersectX, intersectY + 1, intersectZ + 1, innerWallTag, "90");
+                    BlockNBTConverter.putStructure(blockMap, intersectX, intersectY + 1, intersectZ + 1, BlockConfig.innerWallTag, "90");
                 }
 
                 // 5. Process outer walls
-                if (outerWallTag != null) {
+                if (BlockConfig.outerWallTag != null) {
                     // 5.1. Dynamically read the Z-depth of the loaded NBT structure
-                    ListTag<IntTag> sizeTag = outerWallTag.getListTag("size").asIntTagList();
+                    ListTag<IntTag> sizeTag = BlockConfig.outerWallTag.getListTag("size").asIntTagList();
                     int zDepth = sizeTag.get(2).asInt();
 
                     // 5.2. If the wall is 2 blocks deep, the extra layer goes OUTSIDE.
@@ -292,73 +190,33 @@ public class DataConverter {
                     int absZ = dz * 8;
 
                     // North face (Exposed to -Z)
-                    if (!layersContains(layers, dx, dy, dz - 1)) {
+                    if (!SpatialUtils.layersContains(layers, dx, dy, dz - 1)) {
                         // Anchor is at X+1 to avoid the column. Z is pushed negative (outward) if thickness > 1.
-                        NBTHandler.putStructure(blockMap, absX + 1, absY + 1, absZ - outShift, outerWallTag, "0");
+                        BlockNBTConverter.putStructure(blockMap, absX + 1, absY + 1, absZ - outShift, BlockConfig.outerWallTag, "0");
                     }
 
                     // East face (Exposed to +X)
-                    if (!layersContains(layers, dx + 1, dy, dz)) {
+                    if (!SpatialUtils.layersContains(layers, dx + 1, dy, dz)) {
                         // Anchor is placed at the +X boundary (8). X is pushed positive (outward) if thickness > 1.
-                        NBTHandler.putStructure(blockMap, absX + 8 + outShift, absY + 1, absZ + 1, outerWallTag, "90");
+                        BlockNBTConverter.putStructure(blockMap, absX + 8 + outShift, absY + 1, absZ + 1, BlockConfig.outerWallTag, "90");
                     }
 
                     // South face (Exposed to +Z)
-                    if (!layersContains(layers, dx, dy, dz + 1)) {
+                    if (!SpatialUtils.layersContains(layers, dx, dy, dz + 1)) {
                         // Anchor is placed at the +Z boundary (8). Z is pushed positive (outward) if thickness > 1.
-                        NBTHandler.putStructure(blockMap, absX + 7, absY + 1, absZ + 8 + outShift, outerWallTag, "180");
+                        BlockNBTConverter.putStructure(blockMap, absX + 7, absY + 1, absZ + 8 + outShift, BlockConfig.outerWallTag, "180");
                     }
 
                     // West face (Exposed to -X)
-                    if (!layersContains(layers, dx - 1, dy, dz)) {
+                    if (!SpatialUtils.layersContains(layers, dx - 1, dy, dz)) {
                         // Anchor is placed at the -X boundary (0). X is pushed negative (outward) if thickness > 1.
-                        NBTHandler.putStructure(blockMap, absX - outShift, absY + 1, absZ + 7, outerWallTag, "270");
+                        BlockNBTConverter.putStructure(blockMap, absX - outShift, absY + 1, absZ + 7, BlockConfig.outerWallTag, "270");
                     }
                 }
             }
         }
 
         return blockMap;
-    }
-
-    // Check if a relative position (x, y, z) in unit (dx, dy, dz) has another unit on it
-    private static boolean isValidPlacement(Map<Integer, Map<Point2D, QCUnit>> layers, int x, int y, int z, int dx, int dy, int dz) {
-        // 1. Shift the block offset coordinates if the internal coordinate spills past the 0-8 boundaries
-        if (x < 0) dx--;
-        else if (x > 8) dx++;
-
-        if (y < 0) dy--;
-        else if (y > 8) dy++;
-
-        if (z < 0) dz--;
-        else if (z > 8) dz++;
-
-        // 2. Base check: Does the current root chunk exist?
-        boolean res = layersContains(layers, dx, dy, dz);
-
-        // 3. Boundary Neighbor Verification:
-        // If an internal coordinate sits exactly on an outer shell (0 or 8),
-        // ensure the adjacent chunk in that specific direction also exists.
-
-        // X-Boundaries
-        if (x == 0) res |= layersContains(layers, dx - 1, dy, dz);
-        if (x == 8) res |= layersContains(layers, dx + 1, dy, dz);
-
-        // Y-Boundaries
-        if (y == 0) res |= layersContains(layers, dx, dy - 1, dz);
-        if (y == 8) res |= layersContains(layers, dx, dy + 1, dz);
-
-        // Z-Boundaries
-        if (z == 0) res |= layersContains(layers, dx, dy, dz - 1);
-        if (z == 8) res |= layersContains(layers, dx, dy, dz + 1);
-
-        return !res;
-    }
-
-    // Check if the map of QCUnit contains a Unit at a position
-    private static boolean layersContains(Map<Integer, Map<Point2D, QCUnit>> layers, int dx, int dy, int dz) {
-        if (!layers.containsKey(dy)) return false;
-        return layers.get(dy).containsKey(new Point2D(dx, dz));
     }
 
     // Main logic that converts a map of blocks into a map of units and also configures the block config
@@ -376,7 +234,7 @@ public class DataConverter {
             for (int i = 0; i < 9; i++)
                 for (int j = 0; j < 9; j++)
                     for (int k = 0; k < 9; k++) {
-                        if (getBoundaryCount(i, j, k) >= 2 && blockMap.get(new Point3D(pos.x() + i, pos.y() + j, pos.z() + k)) != frameworkCandidate) {
+                        if (SpatialUtils.getBoundaryCount(i, j, k) >= 2 && blockMap.get(new Point3D(pos.x() + i, pos.y() + j, pos.z() + k)) != frameworkCandidate) {
                             flag = false;
                             break;
                         }
@@ -386,7 +244,7 @@ public class DataConverter {
                 ox = pos.x() % 8;
                 oy = pos.y() % 8;
                 oz = pos.z() % 8;
-                frameworkId = frameworkCandidate.getString("Name");
+                BlockConfig.frameworkId = frameworkCandidate.getString("Name");
                 break;
             }
         }
@@ -403,14 +261,14 @@ public class DataConverter {
             CompoundTag blockTag = entry.getValue();
 
             // Ensure block is the corner of a framework with the lowest (x, y, z)
-            if (!blockTag.getString("Name").equals(frameworkId)) continue;
+            if (!blockTag.getString("Name").equals(BlockConfig.frameworkId)) continue;
             if ((pos.x() - ox) % 8 != 0 || (pos.y() - oy) % 8 != 0 || (pos.z() - oz) % 8 != 0) continue;
             boolean flag = true;
             for (int i = 0; i < 9; i++)
                 for (int j = 0; j < 9; j += 8)
                     for (int k = 0; k < 9; k++) {
                         CompoundTag targetBlockTag = blockMap.get(new Point3D(pos.x() + i, pos.y() + j, pos.z() + k));
-                        if (getBoundaryCount(i, j, k) >= 2 && (targetBlockTag == null || !targetBlockTag.getString("Name").equals(frameworkId))) {
+                        if (SpatialUtils.getBoundaryCount(i, j, k) >= 2 && (targetBlockTag == null || !targetBlockTag.getString("Name").equals(BlockConfig.frameworkId))) {
                             flag = false;
                             break;
                         }
@@ -458,21 +316,21 @@ public class DataConverter {
             int baseZ = oz + maxZ * 8 + 8;
 
             // Extract other single block configuration from the southeast corner unit
-            columnId = blockMap.getOrDefault(new Point3D(baseX, baseY - 1, baseZ + 1),
-                    NBTHandler.convertToBlockTag(columnId)).getString("Name");
-            rowId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY, baseZ + 1),
-                    NBTHandler.convertToBlockTag(rowId)).getString("Name");
-            floorId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY - 8, baseZ - 1),
-                    NBTHandler.convertToBlockTag(floorId)).getString("Name");
-            wallId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY + 1, baseZ),
-                    NBTHandler.convertToBlockTag(wallId)).getString("Name");
+            BlockConfig.columnId = blockMap.getOrDefault(new Point3D(baseX, baseY - 1, baseZ + 1),
+                    NBTGenerator.convertToBlockTag(BlockConfig.columnId)).getString("Name");
+            BlockConfig.rowId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY, baseZ + 1),
+                    NBTGenerator.convertToBlockTag(BlockConfig.rowId)).getString("Name");
+            BlockConfig.floorId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY - 8, baseZ - 1),
+                    NBTGenerator.convertToBlockTag(BlockConfig.floorId)).getString("Name");
+            BlockConfig.wallId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY + 1, baseZ),
+                    NBTGenerator.convertToBlockTag(BlockConfig.wallId)).getString("Name");
 
             // Extract .nbt structure configuration for roof and outer wall
-            roofTag = NBTHandler.extractStructureTagFromBlockMap(blockMap, baseX - 7, baseY + 1, baseZ - 7, baseX - 1, baseY + 7, baseZ - 1, "0");
-            roofPath = roofTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+            BlockConfig.roofTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap, baseX - 7, baseY + 1, baseZ - 7, baseX - 1, baseY + 7, baseZ - 1, "0");
+            BlockConfig.roofPath = BlockConfig.roofTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
 
-            outerWallTag = NBTHandler.extractStructureTagFromBlockMap(blockMap, baseX - 7, baseY - 7, baseZ, baseX - 1, baseY - 1, baseZ + 1, "180");
-            outerWallPath = outerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+            BlockConfig.outerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap, baseX - 7, baseY - 7, baseZ, baseX - 1, baseY - 1, baseZ + 1, "180");
+            BlockConfig.outerWallPath = BlockConfig.outerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
         }
 
         // 4. Detect inner walls and inner columns
@@ -518,12 +376,12 @@ public class DataConverter {
                     eastUnit.setWallW(true);
 
                     if (!extractedInnerWall) {
-                        innerWallTag = NBTHandler.extractStructureTagFromBlockMap(blockMap,
+                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
                                 absX + 8, absY + 1, absZ + 1,
                                 absX + 8, absY + 7, absZ + 7,
                                 "90");
-                        innerWallPath = innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedInnerWall = innerWallTag != null;
+                        BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+                        extractedInnerWall = BlockConfig.innerWallTag != null;
                     }
                 }
 
@@ -535,12 +393,12 @@ public class DataConverter {
                     southUnit.setWallN(true);
 
                     if (!extractedInnerWall) {
-                        innerWallTag = NBTHandler.extractStructureTagFromBlockMap(blockMap,
+                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
                                 absX + 1, absY + 1, absZ + 8,
                                 absX + 7, absY + 7, absZ + 8,
                                 "0");
-                        innerWallPath = innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedInnerWall = innerWallTag != null;
+                        BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+                        extractedInnerWall = BlockConfig.innerWallTag != null;
                     }
                 }
 
@@ -548,23 +406,23 @@ public class DataConverter {
                 if (!extractedInnerColumn && eastUnit != null && southUnit != null && southEastUnit != null) {
                     boolean hasInnerColumn = hasAnyBlock(blockMap,
                             absX + 7, absY + 1, absZ + 7,
-                            absX + 9, absY + 7, absZ + 9, frameworkId);
+                            absX + 9, absY + 7, absZ + 9, BlockConfig.frameworkId);
 
                     if (hasInnerColumn) {
-                        innerColumnTag = NBTHandler.extractStructureTagFromBlockMap(blockMap,
+                        BlockConfig.innerColumnTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
                                 absX + 7, absY + 1, absZ + 7,
                                 absX + 9, absY + 7, absZ + 9,
                                 "0");
-                        innerColumnPath = innerColumnTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedInnerColumn = innerColumnTag != null;
+                        BlockConfig.innerColumnPath = BlockConfig.innerColumnTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+                        extractedInnerColumn = BlockConfig.innerColumnTag != null;
                     }
                 }
             }
         }
 
         if (!extractedInnerWall) {
-            innerWallTag = null;
-            innerWallPath = "[Not Configured]";
+            BlockConfig.innerWallTag = null;
+            BlockConfig.innerWallPath = "[Not Configured]";
         }
 
         for (Map.Entry<Integer, Map<Point2D, QCUnit>> layerEntry : layers.entrySet()) {
@@ -594,15 +452,15 @@ public class DataConverter {
 
                         boolean hasInnerColumn = hasAnyBlock(blockMap,
                                 absX + 7, absY + 1, absZ + 7,
-                                absX + 9, absY + 7, absZ + 9, frameworkId);
+                                absX + 9, absY + 7, absZ + 9, BlockConfig.frameworkId);
 
                         if (hasInnerColumn) {
-                            innerColumnTag = NBTHandler.extractStructureTagFromBlockMap(blockMap,
+                            BlockConfig.innerColumnTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
                                     absX + 7, absY + 1, absZ + 7,
                                     absX + 9, absY + 7, absZ + 9,
                                     "0");
-                            innerColumnPath = innerColumnTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                            extractedInnerColumn = innerColumnTag != null;
+                            BlockConfig.innerColumnPath = BlockConfig.innerColumnTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+                            extractedInnerColumn = BlockConfig.innerColumnTag != null;
                         }
                     }
                 }
@@ -610,8 +468,8 @@ public class DataConverter {
         }
 
         if (!extractedInnerColumn) {
-            innerColumnTag = null;
-            innerColumnPath = "[Not Configured]";
+            BlockConfig.innerColumnTag = null;
+            BlockConfig.innerColumnPath = "[Not Configured]";
         }
     }
 
@@ -634,8 +492,6 @@ public class DataConverter {
     }
 
     private static boolean hasAnyBlock(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z) {
-        boolean value = hasAnyBlock(blockMap, x, y, z, X, Y, Z, "");
-        System.out.println("hasAnyBlock (" + (X - x + 1) + ", " + (Y - y + 1) + ", " + (Z - z + 1) + "): " + value);
-        return value;
+        return hasAnyBlock(blockMap, x, y, z, X, Y, Z, "");
     }
 }

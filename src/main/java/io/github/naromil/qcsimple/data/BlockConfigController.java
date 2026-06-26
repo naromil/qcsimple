@@ -1,8 +1,6 @@
 package io.github.naromil.qcsimple.data;
 
-import io.github.naromil.qcsimple.editor.EditorCanvasController;
 import io.github.naromil.qcsimple.editor.EditorState;
-import io.github.naromil.qcsimple.main.MainController;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
@@ -34,23 +32,23 @@ public class BlockConfigController {
     @FXML
     public void initialize() {
         // 1. Load String IDs
-        blocFramework.setText(DataConverter.frameworkId != null ? DataConverter.frameworkId : "");
-        blocColumn.setText(DataConverter.columnId != null ? DataConverter.columnId : "");
-        blocRow.setText(DataConverter.rowId != null ? DataConverter.rowId : "");
-        blocFloor.setText(DataConverter.floorId != null ? DataConverter.floorId : "");
-        blocWall.setText(DataConverter.wallId != null ? DataConverter.wallId : "");
+        blocFramework.setText(BlockConfig.frameworkId != null ? BlockConfig.frameworkId : "");
+        blocColumn.setText(BlockConfig.columnId != null ? BlockConfig.columnId : "");
+        blocRow.setText(BlockConfig.rowId != null ? BlockConfig.rowId : "");
+        blocFloor.setText(BlockConfig.floorId != null ? BlockConfig.floorId : "");
+        blocWall.setText(BlockConfig.wallId != null ? BlockConfig.wallId : "");
 
         // 2. Load NBT File Paths (so the user sees what was previously selected)
-        pathInnerWall.setText(DataConverter.innerWallPath != null ? DataConverter.innerWallPath : "");
-        pathOuterWall.setText(DataConverter.outerWallPath != null ? DataConverter.outerWallPath : "");
-        pathInnerColumn.setText(DataConverter.innerColumnPath != null ? DataConverter.innerColumnPath : "");
-        pathRoof.setText(DataConverter.roofPath != null ? DataConverter.roofPath : "");
+        pathInnerWall.setText(BlockConfig.innerWallPath != null ? BlockConfig.innerWallPath : "");
+        pathOuterWall.setText(BlockConfig.outerWallPath != null ? BlockConfig.outerWallPath : "");
+        pathInnerColumn.setText(BlockConfig.innerColumnPath != null ? BlockConfig.innerColumnPath : "");
+        pathRoof.setText(BlockConfig.roofPath != null ? BlockConfig.roofPath : "");
 
         // 3. Pre-load the temporary tags with the existing global tags
-        tempInnerWallTag = DataConverter.innerWallTag;
-        tempOuterWallTag = DataConverter.outerWallTag;
-        tempInnerColumnTag = DataConverter.innerColumnTag;
-        tempRoofTag = DataConverter.roofTag;
+        tempInnerWallTag = BlockConfig.innerWallTag;
+        tempOuterWallTag = BlockConfig.outerWallTag;
+        tempInnerColumnTag = BlockConfig.innerColumnTag;
+        tempRoofTag = BlockConfig.roofTag;
     }
 
     // --- File Browse Actions ---
@@ -145,23 +143,23 @@ public class BlockConfigController {
     @FXML
     protected void onSaveAction() {
         // 1. Save String IDs
-        DataConverter.frameworkId = blocFramework.getText().trim();
-        DataConverter.columnId = blocColumn.getText().trim();
-        DataConverter.rowId = blocRow.getText().trim();
-        DataConverter.floorId = blocFloor.getText().trim();
-        DataConverter.wallId = blocWall.getText().trim();
+        BlockConfig.frameworkId = blocFramework.getText().trim();
+        BlockConfig.columnId = blocColumn.getText().trim();
+        BlockConfig.rowId = blocRow.getText().trim();
+        BlockConfig.floorId = blocFloor.getText().trim();
+        BlockConfig.wallId = blocWall.getText().trim();
 
         // 2. Save File Paths
-        DataConverter.innerWallPath = pathInnerWall.getText().trim();
-        DataConverter.outerWallPath = pathOuterWall.getText().trim();
-        DataConverter.innerColumnPath = pathInnerColumn.getText().trim();
-        DataConverter.roofPath = pathRoof.getText().trim();
+        BlockConfig.innerWallPath = pathInnerWall.getText().trim();
+        BlockConfig.outerWallPath = pathOuterWall.getText().trim();
+        BlockConfig.innerColumnPath = pathInnerColumn.getText().trim();
+        BlockConfig.roofPath = pathRoof.getText().trim();
 
         // 3. Commit the CompoundTags to the global DataConverter
-        DataConverter.innerWallTag = tempInnerWallTag;
-        DataConverter.outerWallTag = tempOuterWallTag;
-        DataConverter.innerColumnTag = tempInnerColumnTag;
-        DataConverter.roofTag = tempRoofTag;
+        BlockConfig.innerWallTag = tempInnerWallTag;
+        BlockConfig.outerWallTag = tempOuterWallTag;
+        BlockConfig.innerColumnTag = tempInnerColumnTag;
+        BlockConfig.roofTag = tempRoofTag;
 
         System.out.println("Saved Block ID and NBT Configuration successfully.");
         EditorState.getInstance().setDirty(true);

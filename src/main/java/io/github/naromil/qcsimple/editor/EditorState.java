@@ -1,7 +1,7 @@
 package io.github.naromil.qcsimple.editor;
 
-import io.github.naromil.qcsimple.data.DataConverter;
-import io.github.naromil.qcsimple.data.NBTHandler;
+import io.github.naromil.qcsimple.data.UnitBlockConverter;
+import io.github.naromil.qcsimple.data.BlockNBTConverter;
 import io.github.naromil.qcsimple.data.QCUnit;
 import io.github.naromil.qcsimple.data.Point3D;
 import net.querz.nbt.tag.CompoundTag;
@@ -40,12 +40,12 @@ public class EditorState {
 
     // Synchronize root compound tag with layers
     public void syncRootCompoundTag() {
-        Map<Point3D, CompoundTag> blockMap = DataConverter.convertLayersToBlockMap(layers);
-        rootCompoundTag = NBTHandler.convertMapToTag(blockMap);
+        Map<Point3D, CompoundTag> blockMap = UnitBlockConverter.convertLayersToBlockMap(layers);
+        rootCompoundTag = BlockNBTConverter.convertMapToTag(blockMap);
     }
     public void syncMap() {
-        Map<Point3D, CompoundTag> blockMap = NBTHandler.convertTagToMap(rootCompoundTag);
-        layers = DataConverter.convertBlockMapToLayers(blockMap);
+        Map<Point3D, CompoundTag> blockMap = BlockNBTConverter.convertTagToMap(rootCompoundTag);
+        layers = UnitBlockConverter.convertBlockMapToLayers(blockMap);
     }
 
     public boolean isDirty() { return isDirty; }

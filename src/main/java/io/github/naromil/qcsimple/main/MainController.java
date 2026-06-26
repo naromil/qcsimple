@@ -1,8 +1,8 @@
 package io.github.naromil.qcsimple.main;
 
-import io.github.naromil.qcsimple.data.DataConverter;
 import io.github.naromil.qcsimple.data.NBTIO;
-import io.github.naromil.qcsimple.editor.EditorCanvasController;
+import io.github.naromil.qcsimple.data.BlockConfig;
+import io.github.naromil.qcsimple.editor.EditorController;
 import io.github.naromil.qcsimple.editor.EditorState;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,7 +24,7 @@ public class MainController {
     // JavaFX automatically links this variable to the embedded Canvas Controller
     // The naming convention MUST exactly be: [fx:id] + "Controller"
     @FXML
-    private EditorCanvasController editorComponentController;
+    private EditorController editorComponentController;
 
     @FXML
     public void initialize() {
@@ -131,7 +131,7 @@ public class MainController {
 
     @FXML
     protected void onApplyDefaultConfigAction() {
-        DataConverter.applyDefaultConfig();
+        BlockConfig.applyDefaultConfig();
         EditorState.getInstance().setDirty(true);
     }
 
@@ -246,9 +246,9 @@ public class MainController {
     private void saveNbtToFile(File file) {
         try {
             // If DataConverter is not configured, apply default config
-            if(!DataConverter.isConfigured()) {
+            if(!BlockConfig.isConfigured()) {
                 System.out.println("DataConverter is not configured. Applying default config.");
-                DataConverter.applyDefaultConfig();
+                BlockConfig.applyDefaultConfig();
             }
 
             EditorState state = EditorState.getInstance();
