@@ -1,6 +1,5 @@
 package io.github.naromil.qcsimple.main;
 
-import io.github.naromil.qcsimple.data.BlockConfigController;
 import io.github.naromil.qcsimple.data.DataConverter;
 import io.github.naromil.qcsimple.editor.EditorCanvasController;
 import io.github.naromil.qcsimple.editor.EditorState;
@@ -245,7 +244,7 @@ public class MainController {
             state.syncRootCompoundTag();
             CompoundTag nbtData = state.getRootCompoundTag();
 
-            NBTHandler.write(nbtData, file);
+            NBTHandler.writeNbt(nbtData, file);
 
             // Update state info
             state.setCurrentFile(file);

@@ -60,7 +60,7 @@ public class BlockConfigController {
         if (tag != null) {
             ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
             int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y == 7 && (z == 1 || z == 3)) tempInnerWallTag = tag;
+            if(x == 7 && y == 7 && z == 1) tempInnerWallTag = tag;
             else {
                 pathInnerWall.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");
@@ -88,7 +88,7 @@ public class BlockConfigController {
         if (tag != null) {
             ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
             int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == z && y == 7 && (z == 1 || z == 3 || z == 5)) tempInnerColumnTag = tag;
+            if(x == 3 && y == 7 && z == 3) tempInnerColumnTag = tag;
             else {
                 pathInnerColumn.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");
@@ -102,7 +102,7 @@ public class BlockConfigController {
         if (tag != null) {
             ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
             int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == z && y <= 7 && (z == 7 || z == 9)) tempRoofTag = tag;
+            if(x == 7 && y <= 7 && z == 7) tempRoofTag = tag;
             else {
                 pathRoof.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");

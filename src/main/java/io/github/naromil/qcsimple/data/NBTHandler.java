@@ -1,5 +1,6 @@
 package io.github.naromil.qcsimple.data;
 
+import io.github.naromil.qcsimple.editor.Point2D;
 import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
@@ -7,16 +8,20 @@ import net.querz.nbt.tag.IntTag;
 import net.querz.nbt.tag.ListTag;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.GZIPOutputStream;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class NBTHandler {
+
+    private static Map<Integer, Map<Point2D, QCUnit>> layers;
+    private static int x;
+    private static int y;
+    private static int z;
+    private static CompoundTag roofTag;
 
     // Use blockId to generate an CompoundTag item inside palette
     static CompoundTag convertToBlockTag(String blockId) {
@@ -36,13 +41,110 @@ public class NBTHandler {
         return tag; // Crucial: Fixes the missing return statement error
     }
 
+    // Use blockId and sizes to create a uniform cuboid structure CompoundTag
     public static CompoundTag convertToStructureTag(int x, int y, int z, String blockId) {
         Map<Point3D, CompoundTag> blockMap = new HashMap<>();
-        CompoundTag tag = convertToBlockTag(blockId);
+        CompoundTag structure = convertToBlockTag(blockId);
         for (int i = 0; i < x; i++) for(int j = 0; j < y; j++) for(int k = 0; k < z; k++) {
-            blockMap.put(new Point3D(i, j, k), tag);
+            blockMap.put(new Point3D(i, j, k), structure);
         }
         return convertMapToTag(blockMap);
+    }
+
+    // Put a structure in root compound form into a blockMap
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure, String rotation) {
+        if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
+        if (structure == null) throw new IllegalArgumentException("structure cannot be null.");
+
+        ListTag<CompoundTag> palette = structure.getListTag("palette").asCompoundTagList();
+        ListTag<CompoundTag> blocks = structure.getListTag("blocks").asCompoundTagList();
+
+        for (CompoundTag block : blocks) {
+            ListTag<IntTag> pos = block.getListTag("pos").asIntTagList();
+            int stateIndex = block.getInt("state");
+
+            int i = pos.get(0).asInt(), j = pos.get(1).asInt(), k = pos.get(2).asInt();
+            Point3D rotatedPos = switch (rotation) {
+                case "0" -> new Point3D(i, j, k);
+                case "90" -> new Point3D(k, j, -i);
+                case "180" -> new Point3D(-i, j, -k);
+                case "270" -> new Point3D(-k, j, i);
+                default -> throw new IllegalStateException("Unexpected rotation value: " + rotation);
+            };
+
+            Point3D absolutePos = new Point3D(x + rotatedPos.x(), y + rotatedPos.y(), z + rotatedPos.z());
+
+            // Grab the original state, rotate it (which safely clones it), and map it
+            CompoundTag originalState = palette.get(stateIndex);
+            CompoundTag rotatedState = rotateBlockState(originalState, rotation);
+
+            blockMap.put(absolutePos, palette.get(stateIndex));
+        }
+    }
+
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure) {
+        putStructure(blockMap, x, y, z, structure, "0");
+    }
+
+    /**
+     * Deep clones a block state and updates directional properties based on rotation.
+     */
+    private static CompoundTag rotateBlockState(CompoundTag originalState, String rotation) {
+        if (rotation.equals("0") || !originalState.containsKey("Properties")) {
+            return originalState; // No rotation needed, or block has no directional states
+        }
+
+        // 1. Deep clone to prevent corrupting the global palette
+        CompoundTag newState = originalState.clone();
+        CompoundTag properties = newState.getCompoundTag("Properties");
+
+        // 2. Rotate Facing (Stairs, Chests, Furnaces, Torches)
+        if (properties.containsKey("facing")) {
+            String currentFacing = properties.getString("facing");
+            properties.putString("facing", rotateFacing(currentFacing, rotation));
+        }
+
+        // 3. Rotate Axis (Logs, Pillars, Basalt)
+        if (properties.containsKey("axis")) {
+            String currentAxis = properties.getString("axis");
+            // Axis only swaps between X and Z on 90 and 270 degree turns
+            if (rotation.equals("90") || rotation.equals("270")) {
+                if (currentAxis.equals("x")) properties.putString("axis", "z");
+                else if (currentAxis.equals("z")) properties.putString("axis", "x");
+            }
+        }
+
+        return newState;
+    }
+
+    /**
+     * Maps a cardinal direction string to its new direction after a Clockwise rotation.
+     */
+    private static String rotateFacing(String facing, String rotation) {
+        return switch (rotation) {
+            case "90" -> switch (facing) { // 90 Clockwise
+                case "north" -> "east";
+                case "east" -> "south";
+                case "south" -> "west";
+                case "west" -> "north";
+                default -> facing; // Ignores "up" and "down"
+            };
+            case "180" -> switch (facing) { // 180 Clockwise
+                case "north" -> "south";
+                case "east" -> "west";
+                case "south" -> "north";
+                case "west" -> "east";
+                default -> facing;
+            };
+            case "270" -> switch (facing) { // 270 Clockwise
+                case "north" -> "west";
+                case "east" -> "north";
+                case "south" -> "east";
+                case "west" -> "south";
+                default -> facing;
+            };
+            default -> facing;
+        };
     }
 
     // Convert generated blockMap into complete root CompoundTag ready for file IO
@@ -113,7 +215,7 @@ public class NBTHandler {
         }
     }
 
-    public static void write(CompoundTag nbtData, File file) {
+    public static void writeNbt(CompoundTag nbtData, File file) {
         // The Root must be wrapped in a NamedTag with an empty string.
         NamedTag rootTag = new NamedTag("", nbtData);
         try {
