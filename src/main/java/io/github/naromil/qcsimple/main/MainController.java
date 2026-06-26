@@ -1,9 +1,9 @@
 package io.github.naromil.qcsimple.main;
 
 import io.github.naromil.qcsimple.data.DataConverter;
+import io.github.naromil.qcsimple.data.NBTIO;
 import io.github.naromil.qcsimple.editor.EditorCanvasController;
 import io.github.naromil.qcsimple.editor.EditorState;
-import io.github.naromil.qcsimple.data.NBTHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -68,6 +68,11 @@ public class MainController {
         }
     }
 
+//    @FXML
+//    protected void onLayerCopyUpAction() {
+//        // TODO: Implement layer up action that also copies the current layer data to the new layer
+//    }
+
     private void changeLayer(int offset) {
         EditorState state = EditorState.getInstance();
         int newLayer = state.getCurrentLayerIndex() + offset;
@@ -88,6 +93,10 @@ public class MainController {
 
         // Fetch the unique 2D grid pointer belonging to this level and force paint
         editorComponentController.loadLayerData(state.getMapForLayer(activeLayer));
+    }
+
+    public int getCellSize() {
+        return editorComponentController.getCellSize();
     }
 
     @FXML
@@ -123,6 +132,7 @@ public class MainController {
     @FXML
     protected void onApplyDefaultConfigAction() {
         DataConverter.applyDefaultConfig();
+        EditorState.getInstance().setDirty(true);
     }
 
     /**
@@ -170,7 +180,7 @@ public class MainController {
         if (selectedFile != null) {
             try {
                 // 3. Read the file into memory using your chosen NBT Engine
-                CompoundTag parsedNbt = NBTHandler.readNbt(selectedFile);
+                CompoundTag parsedNbt = NBTIO.readNbt(selectedFile);
 
                 // 4. Commit to the global State
                 EditorState state = EditorState.getInstance();
@@ -181,7 +191,7 @@ public class MainController {
 
                 System.out.println("Successfully loaded: " + selectedFile.getName());
 
-                editorComponentController.redraw();
+                syncCanvasWithCurrentLayer();
 
             } catch (Exception e) {
                 showErrorDialog("Failed to open File", "An error occurred while parsing the NBT file:\n" + e.getMessage());
@@ -200,6 +210,7 @@ public class MainController {
     @FXML
     protected void onSaveMenuAction() {
         EditorState state = EditorState.getInstance();
+        if(!state.isDirty()) return;
 
         // If there is no open file path, fallback to "Save As" behavior
         if (state.getCurrentFile().isEmpty()) {
@@ -244,7 +255,7 @@ public class MainController {
             state.syncRootCompoundTag();
             CompoundTag nbtData = state.getRootCompoundTag();
 
-            NBTHandler.writeNbt(nbtData, file);
+            NBTIO.writeNbt(nbtData, file);
 
             // Update state info
             state.setCurrentFile(file);

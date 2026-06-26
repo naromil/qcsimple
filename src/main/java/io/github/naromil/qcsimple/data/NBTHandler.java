@@ -1,14 +1,9 @@
 package io.github.naromil.qcsimple.data;
 
-import io.github.naromil.qcsimple.editor.Point2D;
-import net.querz.nbt.io.NBTUtil;
-import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.IntTag;
 import net.querz.nbt.tag.ListTag;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,12 +11,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 public class NBTHandler {
-
-    private static Map<Integer, Map<Point2D, QCUnit>> layers;
-    private static int x;
-    private static int y;
-    private static int z;
-    private static CompoundTag roofTag;
 
     // Use blockId to generate an CompoundTag item inside palette
     static CompoundTag convertToBlockTag(String blockId) {
@@ -42,17 +31,39 @@ public class NBTHandler {
     }
 
     // Use blockId and sizes to create a uniform cuboid structure CompoundTag
-    public static CompoundTag convertToStructureTag(int x, int y, int z, String blockId) {
+    public static CompoundTag generateSimpleStructureTag(String[] blocks, byte[][][] map) {
+        if(map == null || map.length == 0 || map[0].length == 0 || map[0][0].length == 0) {
+            return null;
+        }
+        int x = map.length;
+        int y = map[0].length;
+        int z = map[0][0].length;
+
         Map<Point3D, CompoundTag> blockMap = new HashMap<>();
-        CompoundTag structure = convertToBlockTag(blockId);
         for (int i = 0; i < x; i++) for(int j = 0; j < y; j++) for(int k = 0; k < z; k++) {
-            blockMap.put(new Point3D(i, j, k), structure);
+            int index = map[i][j][k];
+            if(index < 0 || index >= blocks.length) continue;
+
+            CompoundTag blockId = convertToBlockTag(blocks[index]);
+            blockMap.put(new Point3D(i, j, k), blockId);
         }
         return convertMapToTag(blockMap);
     }
 
-    // Put a structure in root compound form into a blockMap
-    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure, String rotation) {
+    public static CompoundTag generateSimpleStructureTag(String blockId, byte[][][] map) {
+        return generateSimpleStructureTag(new String[]{blockId}, map);
+    }
+
+    public static CompoundTag generateSimpleStructureTag(int x, int y, int z, String blockId) {
+        byte[][][] blocks = new byte[x][y][z];
+        for(int i=0; i<x; i++) for(int j=0; j<y; j++) for(int k=0; k<z; k++) {
+            blocks[i][j][k] = 0;
+        }
+        return generateSimpleStructureTag((String[]) new String[]{blockId}, blocks);
+    }
+
+    // Put a structure tag in root compound form into a blockMap
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure, String rotation) throws IllegalStateException {
         if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
         if (structure == null) throw new IllegalArgumentException("structure cannot be null.");
 
@@ -78,7 +89,7 @@ public class NBTHandler {
             CompoundTag originalState = palette.get(stateIndex);
             CompoundTag rotatedState = rotateBlockState(originalState, rotation);
 
-            blockMap.put(absolutePos, palette.get(stateIndex));
+            blockMap.put(absolutePos, rotatedState);
         }
     }
 
@@ -202,44 +213,68 @@ public class NBTHandler {
         return rootCompound;
     }
 
-    /**
-     * Reads and parses a Minecraft NBT file, automatically managing GZIP streams.
-     */
-    public static CompoundTag readNbt(File file) throws IOException {
-        NamedTag namedTag = NBTUtil.read(file);
+    public static CompoundTag extractStructureTagFromBlockMap(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z, String rotation) {
+        if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
 
-        if (namedTag.getTag() instanceof CompoundTag) {
-            return (CompoundTag) namedTag.getTag();
-        } else {
-            throw new IOException("Invalid NBT structure: Root node is not a CompoundTag.");
+        Map<Point3D, CompoundTag> extractedMap = new HashMap<>();
+
+        int minX = min(x, X), maxX = max(x, X);
+        int minY = min(y, Y), maxY = max(y, Y);
+        int minZ = min(z, Z), maxZ = max(z, Z);
+
+        for (int absX = minX; absX <= maxX; absX++) {
+            for (int absY = minY; absY <= maxY; absY++) {
+                for (int absZ = minZ; absZ <= maxZ; absZ++) {
+                    CompoundTag blockTag = blockMap.get(new Point3D(absX, absY, absZ));
+                    if (blockTag == null) continue;
+
+                    int rotatedX = absX - x;
+                    int rotatedY = absY - y;
+                    int rotatedZ = absZ - z;
+
+                    Point3D originalPos = getUnrotatedPos(rotation, rotatedX, rotatedY, rotatedZ);
+                    extractedMap.put(originalPos, blockTag);
+                }
+            }
         }
+
+        if (extractedMap.isEmpty()) return null;
+        return convertMapToTag(extractedMap);
     }
 
-    public static void writeNbt(CompoundTag nbtData, File file) {
-        // The Root must be wrapped in a NamedTag with an empty string.
-        NamedTag rootTag = new NamedTag("", nbtData);
-        try {
-            NBTUtil.write(rootTag, file);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    private static Point3D getUnrotatedPos(String rotation, int i, int j, int k) throws IllegalStateException {
+        return switch (rotation) {
+            case "0" -> new Point3D(i, j, k);
+            case "90" -> new Point3D(k, j, -i);
+            case "180" -> new Point3D(-i, j, -k);
+            case "270" -> new Point3D(-k, j, i);
+            default -> throw new IllegalStateException("Unexpected rotation value: " + rotation);
+        };
+    }
+
+    // Convert a CompoundTag representing a region file into a map of block positions to block-state CompoundTags.
+    public static Map<Point3D, CompoundTag> convertTagToMap(CompoundTag rootCompoundTag) {
+        if (rootCompoundTag == null) {
+            throw new IllegalArgumentException("rootCompoundTag cannot be null.");
         }
 
-        // TODO: Fix the problem that the GZIP stream doesn't end inside NBTUtil
-//        // 1. Manually open the file and wrap it in a GZIP stream.
-//        // The try-with-resources block () ensures these streams are ALWAYS closed.
-//        try (FileOutputStream fos = new FileOutputStream(file);
-//             GZIPOutputStream gzipOut = new GZIPOutputStream(fos)) {
-//
-//            // 2. Pass the STREAM to NBTUtil, and set compression to FALSE.
-//            // NBTUtil writes raw bytes, and our gzipOut handles the compression safely.
-//            NBTUtil.write(rootTag, gzipOut.toString(), false);
-//
-//            // 3. Explicitly tell the GZIP stream to write its trailer and flush.
-//            gzipOut.finish();
-//            gzipOut.flush();
-//        } catch(Exception e) {
-//            throw new RuntimeException(e);
-//            e.printStackTrace(); // Keep this on while debugging!
-//        }
+        Map<Point3D, CompoundTag> blockMap = new HashMap<>();
+
+        ListTag<CompoundTag> palette = rootCompoundTag.getListTag("palette").asCompoundTagList();
+        ListTag<CompoundTag> blocks = rootCompoundTag.getListTag("blocks").asCompoundTagList();
+
+        for (CompoundTag block : blocks) {
+            ListTag<IntTag> pos = block.getListTag("pos").asIntTagList();
+            int stateIndex = block.getInt("state");
+
+            int x = pos.get(0).asInt();
+            int y = pos.get(1).asInt();
+            int z = pos.get(2).asInt();
+
+            CompoundTag blockTag = palette.get(stateIndex);
+            blockMap.put(new Point3D(x, y, z), blockTag);
+        }
+
+        return blockMap;
     }
 }

@@ -54,18 +54,18 @@ public class EditorCanvasController {
             if (event.getButton() == MouseButton.PRIMARY) {
 
                 if (event.isShiftDown()) {
-                    // Shift + Left Click: Erase wall placement
+                    // Shift + Left-Click: Erase wall placement
                     handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false);
 
                 } else {
-                    // Left Click: Erase block
+                    // Left-Click: Erase block
                     currentLayerData.remove(clickedPoint);
                 }
 
             } else if (event.getButton() == MouseButton.SECONDARY) {
 
                 if (event.isShiftDown()) {
-                    // Shift + Right Click: Place wall placement
+                    // Shift + Right-Click: Place wall placement
                     handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true);
 
                 } else {
@@ -79,6 +79,8 @@ public class EditorCanvasController {
             redraw();
         }
     }
+
+    public int getCellSize() { return cellSize; }
 
     private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ, boolean newState) {
         // 1. Local coordinates inside the cell
@@ -98,7 +100,7 @@ public class EditorCanvasController {
             return;   // no block here → cannot attach a wall
         }
 
-        // 4. For each edge that the click targets, toggle only if the neighbour exists
+        // 4. For each edge that the click targets, toggle only if the neighbor exists
         if (min > cellSize / 4.0 || min == distN) {
             tryToggleWall(centerUnit, gridX, gridZ - 1, newState, Direction.NORTH);
         }

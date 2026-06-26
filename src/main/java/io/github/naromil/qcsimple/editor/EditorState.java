@@ -40,11 +40,12 @@ public class EditorState {
 
     // Synchronize root compound tag with layers
     public void syncRootCompoundTag() {
-        Map<Point3D, CompoundTag> blockMap = DataConverter.convertToBlockMap(layers);
+        Map<Point3D, CompoundTag> blockMap = DataConverter.convertLayersToBlockMap(layers);
         rootCompoundTag = NBTHandler.convertMapToTag(blockMap);
     }
     public void syncMap() {
-        layers = DataConverter.tagToMap(rootCompoundTag);
+        Map<Point3D, CompoundTag> blockMap = NBTHandler.convertTagToMap(rootCompoundTag);
+        layers = DataConverter.convertBlockMapToLayers(blockMap);
     }
 
     public boolean isDirty() { return isDirty; }

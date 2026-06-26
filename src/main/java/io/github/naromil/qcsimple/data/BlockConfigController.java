@@ -1,6 +1,7 @@
 package io.github.naromil.qcsimple.data;
 
 import io.github.naromil.qcsimple.editor.EditorCanvasController;
+import io.github.naromil.qcsimple.editor.EditorState;
 import io.github.naromil.qcsimple.main.MainController;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -163,6 +164,7 @@ public class BlockConfigController {
         DataConverter.roofTag = tempRoofTag;
 
         System.out.println("Saved Block ID and NBT Configuration successfully.");
+        EditorState.getInstance().setDirty(true);
         closeWindow();
     }
 
