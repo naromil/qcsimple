@@ -73,7 +73,7 @@ jobs:
       - name: Build AppImage
         if: matrix.os == 'ubuntu-latest'
         run: |
-          ARCH=x86_64 ./appimagetool AppDir QCSimple-x86_64.AppImage
+          APPIMAGE_EXTRACT_AND_RUN=1 ARCH=x86_64 ./appimagetool AppDir QCSimple-x86_64.AppImage
 
       - name: Upload Linux Artifact
         if: matrix.os == 'ubuntu-latest'
