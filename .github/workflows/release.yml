@@ -43,7 +43,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           chmod +x ./gradlew
-          ./gradlew jpackageImage
+          ./gradlew jpackageImage --no-daemon
 
       - name: Create AppDir
         if: matrix.os == 'ubuntu-latest'
@@ -95,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: QCSimple-Windows
-          path: build/launch4j/libs/*.exe
+          path: build/libs/*.exe
           if-no-files-found: error
 
   # ==========================================
