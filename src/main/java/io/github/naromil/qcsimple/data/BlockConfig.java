@@ -13,18 +13,18 @@ public class BlockConfig {
     protected static String innerWallPath = "";
     protected static String outerWallPath = "";
     protected static String innerColumnPath = "";
-    protected static String roofPath = "";
+    protected static String gatePath = "";
     // Parsed NBT Data (for your actual structure compiler)
     protected static CompoundTag innerWallTag = null;
     protected static CompoundTag outerWallTag = null;
     protected static CompoundTag innerColumnTag = null;
-    protected static CompoundTag roofTag = null;
+    protected static CompoundTag gateTag = null;
 
     public static boolean isConfigured() {
         return innerWallPath != null && !innerWallPath.isEmpty() &&
                 outerWallPath != null && !outerWallPath.isEmpty() &&
                 innerColumnPath != null && !innerColumnPath.isEmpty() &&
-                roofPath != null && !roofPath.isEmpty();
+                gatePath != null && !gatePath.isEmpty();
     }
 
     // Apply default config conveniently for better testing
@@ -40,7 +40,7 @@ public class BlockConfig {
         innerWallPath = "[Generated Default: Glass]";
         outerWallPath = "[Generated Default: Deepslate Bricks]";
         innerColumnPath = "[Generated Default: Stripped Spruce Log]";
-        roofPath = "[Not Configured]";
+        gatePath = "[Not Configured]";
 
         // 3. Default .nbt structure tags
         innerWallTag = NBTGenerator.generateSimpleStructureTag("minecraft:glass", new byte[][][]{

@@ -10,11 +10,11 @@ Users can then configure block choices and upload customized .nbt files to deter
 - Row Block: The row attached to the framework on the outside.
 - Column Block: The column attached to the framework on the outside.
 - Wall Block: The default wall used above the ceiling and below the floor.
-- Floor Block: The floor
-- Inner Wall: 7x7x1 sized .nbt structure file. The uploaded file will be identified as the north wall.
-- Outer Wall: Same as inner wall but can be 7x7x1 or 7x7x2 where the extra layer will be on the outside.
+- Floor Block: The floor.
+- Inner Wall: 7x7x1 / 7x7x3 sized .nbt structure file. The uploaded file will be identified as the north wall.
+- Outer Wall: Same as inner wall but can be 7x7x(1~3) where the extra layer will be on the outside.
 - Inner Column: A 3x7x3 stylistic column when 2 by 2 Units join together without inner walls.
-- Roof: A 7x7x(1~7) roof when a Unit doesn't have neighbors above it.
+- Gate: Another 7x7x1 / 7x7x3 inner wall that allows passage.
 
 ### Sample Interface
 

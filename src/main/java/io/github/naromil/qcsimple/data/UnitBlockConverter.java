@@ -124,10 +124,6 @@ public class UnitBlockConverter {
                             }
                         }
 
-                // 2. Process roofs
-                if (SpatialUtils.layersContains(layers, dx, dy + 1, dz) && BlockConfig.roofTag != null)
-                    BlockNBTConverter.putStructure(blockMap, dx * 8, dy * 8 + 9, dz * 8, BlockConfig.roofTag);
-
                 // We treat the current unit (dx, dz) as the North-West corner.
                 QCUnit uNW = currentUnit;
                 QCUnit uNE = currentLayerMap.get(new Point2D(dx + 1, dz));
@@ -324,10 +320,6 @@ public class UnitBlockConverter {
                     NBTGenerator.convertToBlockTag(BlockConfig.floorId)).getString("Name");
             BlockConfig.wallId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY + 1, baseZ),
                     NBTGenerator.convertToBlockTag(BlockConfig.wallId)).getString("Name");
-
-            // Extract .nbt structure configuration for roof and outer wall
-            BlockConfig.roofTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap, baseX - 7, baseY + 1, baseZ - 7, baseX - 1, baseY + 7, baseZ - 1, "0");
-            BlockConfig.roofPath = BlockConfig.roofTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
 
             BlockConfig.outerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap, baseX - 7, baseY - 7, baseZ, baseX - 1, baseY - 1, baseZ + 1, "180");
             BlockConfig.outerWallPath = BlockConfig.outerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";

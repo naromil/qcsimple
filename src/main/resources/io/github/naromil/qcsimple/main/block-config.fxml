@@ -48,10 +48,10 @@
         <Button text="..." onAction="#onBrowseInnerColumn" />
     </HBox>
 
-    <Label text="Roof .nbt:" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+    <Label text="Gate .nbt:" GridPane.columnIndex="2" GridPane.rowIndex="4" />
     <HBox spacing="5" GridPane.columnIndex="3" GridPane.rowIndex="4">
-        <TextField fx:id="pathRoof" editable="false" promptText="No file selected..." HBox.hgrow="ALWAYS" />
-        <Button text="..." onAction="#onBrowseRoof" />
+        <TextField fx:id="pathGate" editable="false" promptText="No file selected..." HBox.hgrow="ALWAYS" />
+        <Button text="..." onAction="#onBrowseGate" />
     </HBox>
 
     <HBox alignment="bottom_right" spacing="10" GridPane.columnIndex="3" GridPane.rowIndex="6">

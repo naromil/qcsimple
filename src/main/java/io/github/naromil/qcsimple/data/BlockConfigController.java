@@ -21,13 +21,13 @@ public class BlockConfigController {
 
     // NBT Path Display Fields
     @FXML
-    protected TextField pathInnerWall, pathOuterWall, pathInnerColumn, pathRoof;
+    protected TextField pathInnerWall, pathOuterWall, pathInnerColumn, pathGate;
 
     // Temporary storage for parsed tags during this window session
     private CompoundTag tempInnerWallTag = null;
     private CompoundTag tempOuterWallTag = null;
     private CompoundTag tempInnerColumnTag = null;
-    private CompoundTag tempRoofTag = null;
+    private CompoundTag tempGateTag = null;
 
     @FXML
     public void initialize() {
@@ -42,13 +42,13 @@ public class BlockConfigController {
         pathInnerWall.setText(BlockConfig.innerWallPath != null ? BlockConfig.innerWallPath : "");
         pathOuterWall.setText(BlockConfig.outerWallPath != null ? BlockConfig.outerWallPath : "");
         pathInnerColumn.setText(BlockConfig.innerColumnPath != null ? BlockConfig.innerColumnPath : "");
-        pathRoof.setText(BlockConfig.roofPath != null ? BlockConfig.roofPath : "");
+        pathGate.setText(BlockConfig.gatePath != null ? BlockConfig.gatePath : "");
 
         // 3. Pre-load the temporary tags with the existing global tags
         tempInnerWallTag = BlockConfig.innerWallTag;
         tempOuterWallTag = BlockConfig.outerWallTag;
         tempInnerColumnTag = BlockConfig.innerColumnTag;
-        tempRoofTag = BlockConfig.roofTag;
+        tempGateTag = BlockConfig.gateTag;
     }
 
     // --- File Browse Actions ---
@@ -96,14 +96,14 @@ public class BlockConfigController {
     }
 
     @FXML
-    protected void onBrowseRoof() {
-        CompoundTag tag = handleNbtFileSelection(pathRoof);
+    protected void onBrowseGate() {
+        CompoundTag tag = handleNbtFileSelection(pathGate);
         if (tag != null) {
             ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
             int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y <= 7 && z == 7) tempRoofTag = tag;
+            if(x == 7 && y <= 7 && z == 7) tempGateTag = tag;
             else {
-                pathRoof.clear();
+                pathGate.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");
             }
         }
@@ -153,13 +153,13 @@ public class BlockConfigController {
         BlockConfig.innerWallPath = pathInnerWall.getText().trim();
         BlockConfig.outerWallPath = pathOuterWall.getText().trim();
         BlockConfig.innerColumnPath = pathInnerColumn.getText().trim();
-        BlockConfig.roofPath = pathRoof.getText().trim();
+        BlockConfig.gatePath = pathGate.getText().trim();
 
         // 3. Commit the CompoundTags to the global DataConverter
         BlockConfig.innerWallTag = tempInnerWallTag;
         BlockConfig.outerWallTag = tempOuterWallTag;
         BlockConfig.innerColumnTag = tempInnerColumnTag;
-        BlockConfig.roofTag = tempRoofTag;
+        BlockConfig.gateTag = tempGateTag;
 
         System.out.println("Saved Block ID and NBT Configuration successfully.");
         EditorState.getInstance().setDirty(true);
