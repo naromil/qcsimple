@@ -140,6 +140,7 @@ public class MainController {
     protected void onApplyDefaultConfigAction() {
         BlockConfig.applyDefaultConfig();
         EditorState.getInstance().setDirty(true);
+        System.out.println("Applied default Block ID and NBT Configuration successfully.");
     }
 
     /**
