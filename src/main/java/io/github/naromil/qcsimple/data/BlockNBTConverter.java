@@ -49,6 +49,7 @@ public class BlockNBTConverter {
     }
 
     // Convert generated blockMap into complete root CompoundTag ready for file IO
+    // This ignores original coordinates and rebases them on the min/max coordinates
     public static CompoundTag convertMapToTag(Map<Point3D, CompoundTag> blockMap) {
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
@@ -103,7 +104,7 @@ public class BlockNBTConverter {
         return rootCompound;
     }
 
-    public static CompoundTag extractStructureFromBlockMap(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z, String rotation) {
+    public static CompoundTag extractStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z, String rotation) {
         if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
 
         Map<Point3D, CompoundTag> extractedMap = new HashMap<>();
@@ -133,6 +134,7 @@ public class BlockNBTConverter {
     }
 
     // Convert a CompoundTag representing a region file into a map of block positions to block-state CompoundTags.
+    // This uses the original coordinates from the CompoundTag
     public static Map<Point3D, CompoundTag> convertTagToMap(CompoundTag rootCompoundTag) {
         if (rootCompoundTag == null) {
             throw new IllegalArgumentException("rootCompoundTag cannot be null.");

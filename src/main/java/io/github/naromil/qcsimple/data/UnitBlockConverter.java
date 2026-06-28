@@ -3,8 +3,6 @@ package io.github.naromil.qcsimple.data;
 import io.github.naromil.qcsimple.editor.Point2D;
 import io.github.naromil.qcsimple.main.MainApp;
 import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.IntTag;
-import net.querz.nbt.tag.ListTag;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -158,7 +156,10 @@ public class UnitBlockConverter {
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8 + 8;
 
-                    BlockNBTConverter.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ, BlockConfig.innerWallTag);
+                    int zDepth = BlockConfig.getZ(BlockConfig.innerWallTag);
+                    int outShift = (zDepth == 3) ? 1 : 0;
+
+                    BlockNBTConverter.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ - outShift, BlockConfig.innerWallTag);
                 }
 
                 // 4.2. Verify it can form an inner wall with the east unit
@@ -167,19 +168,21 @@ public class UnitBlockConverter {
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8;
 
-                    BlockNBTConverter.putStructure(blockMap, intersectX, intersectY + 1, intersectZ + 1, BlockConfig.innerWallTag, "90");
+                    int zDepth = BlockConfig.getZ(BlockConfig.innerWallTag);
+                    int outShift = (zDepth == 3) ? 1 : 0;
+
+                    BlockNBTConverter.putStructure(blockMap, intersectX + outShift, intersectY + 1, intersectZ + 1, BlockConfig.innerWallTag, "90");
                 }
 
                 // 5. Process outer walls
                 if (BlockConfig.outerWallTag != null) {
-                    // 5.1. Dynamically read the Z-depth of the loaded NBT structure
-                    ListTag<IntTag> sizeTag = BlockConfig.outerWallTag.getListTag("size").asIntTagList();
-                    int zDepth = sizeTag.get(2).asInt();
+                    // 5.1. Read the Z-depth of the loaded NBT structure
+                    int zDepth = BlockConfig.getZ(BlockConfig.outerWallTag);
 
                     // 5.2. If the wall is 2 blocks deep, the extra layer goes OUTSIDE.
                     // We shift the placement anchor outward by (depth - 1).
                     // A 1-deep wall has a shift of 0, keeping it exactly on the boundary.
-                    int outShift = Math.max(0, zDepth - 1);
+                    int outShift = (zDepth >= 2) ? 1 : 0;
 
                     int absX = dx * 8;
                     int absY = dy * 8;
@@ -321,7 +324,7 @@ public class UnitBlockConverter {
             BlockConfig.wallId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY + 1, baseZ),
                     NBTGenerator.convertToBlockTag(BlockConfig.wallId)).getString("Name");
 
-            BlockConfig.outerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap, baseX - 7, baseY - 7, baseZ, baseX - 1, baseY - 1, baseZ + 1, "180");
+            BlockConfig.outerWallTag = BlockNBTConverter.extractStructure(blockMap, baseX - 7, baseY - 7, baseZ - 1, baseX - 1, baseY - 1, baseZ + 1, "180");
             BlockConfig.outerWallPath = BlockConfig.outerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
         }
 
@@ -360,53 +363,39 @@ public class UnitBlockConverter {
                 int absY = oy + dy * 8;
                 int absZ = oz + dz * 8;
 
+                // 1. Try extracting innerWall with the east side
                 QCUnit eastUnit = currentLayer.get(new Point2D(dx + 1, dz));
                 if (eastUnit != null && hasAnyBlock(blockMap,
-                        absX + 8, absY + 1, absZ + 2,
-                        absX + 8, absY + 7, absZ + 6)) {
+                        absX + 7, absY + 1, absZ + 2,
+                        absX + 9, absY + 7, absZ + 6)) {
                     unit.setWallE(true);
                     eastUnit.setWallW(true);
 
                     if (!extractedInnerWall) {
-                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
-                                absX + 8, absY + 1, absZ + 1,
-                                absX + 8, absY + 7, absZ + 7,
+                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructure(blockMap,
+                                absX + 7, absY + 1, absZ + 1,
+                                absX + 9, absY + 7, absZ + 7,
                                 "90");
                         BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
                         extractedInnerWall = BlockConfig.innerWallTag != null;
                     }
                 }
 
+                // 2. Try extracting innerWall with the south side
                 QCUnit southUnit = currentLayer.get(new Point2D(dx, dz + 1));
                 if (southUnit != null && hasAnyBlock(blockMap,
-                        absX + 2, absY + 1, absZ + 8,
-                        absX + 6, absY + 7, absZ + 8)) {
+                        absX + 2, absY + 1, absZ + 7,
+                        absX + 6, absY + 7, absZ + 9)) {
                     unit.setWallS(true);
                     southUnit.setWallN(true);
 
                     if (!extractedInnerWall) {
-                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
-                                absX + 1, absY + 1, absZ + 8,
-                                absX + 7, absY + 7, absZ + 8,
+                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructure(blockMap,
+                                absX + 1, absY + 1, absZ + 7,
+                                absX + 7, absY + 7, absZ + 9,
                                 "0");
                         BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
                         extractedInnerWall = BlockConfig.innerWallTag != null;
-                    }
-                }
-
-                QCUnit southEastUnit = currentLayer.get(new Point2D(dx + 1, dz + 1));
-                if (!extractedInnerColumn && eastUnit != null && southUnit != null && southEastUnit != null) {
-                    boolean hasInnerColumn = hasAnyBlock(blockMap,
-                            absX + 7, absY + 1, absZ + 7,
-                            absX + 9, absY + 7, absZ + 9, BlockConfig.frameworkId);
-
-                    if (hasInnerColumn) {
-                        BlockConfig.innerColumnTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
-                                absX + 7, absY + 1, absZ + 7,
-                                absX + 9, absY + 7, absZ + 9,
-                                "0");
-                        BlockConfig.innerColumnPath = BlockConfig.innerColumnTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedInnerColumn = BlockConfig.innerColumnTag != null;
                     }
                 }
             }
@@ -430,6 +419,7 @@ public class UnitBlockConverter {
                 int absY = oy + dy * 8;
                 int absZ = oz + dz * 8;
 
+                // 3. Try extracting innerColumn within the 2x2 grid
                 QCUnit eastUnit = currentLayer.get(new Point2D(dx + 1, dz));
                 QCUnit southUnit = currentLayer.get(new Point2D(dx, dz + 1));
                 QCUnit southEastUnit = currentLayer.get(new Point2D(dx + 1, dz + 1));
@@ -447,7 +437,7 @@ public class UnitBlockConverter {
                                 absX + 9, absY + 7, absZ + 9, BlockConfig.frameworkId);
 
                         if (hasInnerColumn) {
-                            BlockConfig.innerColumnTag = BlockNBTConverter.extractStructureFromBlockMap(blockMap,
+                            BlockConfig.innerColumnTag = BlockNBTConverter.extractStructure(blockMap,
                                     absX + 7, absY + 1, absZ + 7,
                                     absX + 9, absY + 7, absZ + 9,
                                     "0");

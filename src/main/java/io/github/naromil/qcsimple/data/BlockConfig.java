@@ -1,6 +1,8 @@
 package io.github.naromil.qcsimple.data;
 
 import net.querz.nbt.tag.CompoundTag;
+import net.querz.nbt.tag.IntTag;
+import net.querz.nbt.tag.ListTag;
 
 public class BlockConfig {
     // Defaulting to empty strings or basic Minecraft blocks
@@ -21,10 +23,7 @@ public class BlockConfig {
     protected static CompoundTag gateTag = null;
 
     public static boolean isConfigured() {
-        return innerWallPath != null && !innerWallPath.isEmpty() &&
-                outerWallPath != null && !outerWallPath.isEmpty() &&
-                innerColumnPath != null && !innerColumnPath.isEmpty() &&
-                gatePath != null && !gatePath.isEmpty();
+        return frameworkId != null;
     }
 
     // Apply default config conveniently for better testing
@@ -37,30 +36,40 @@ public class BlockConfig {
         wallId = "minecraft:deepslate_tiles"; // Solid backdrop walls
 
         // 2. Clear default text indicators for the UI
-        innerWallPath = "[Generated Default: Glass]";
+        innerWallPath = "[Generated Default: Deepslate Bricks]";
         outerWallPath = "[Generated Default: Deepslate Bricks]";
         innerColumnPath = "[Generated Default: Stripped Spruce Log]";
-        gatePath = "[Not Configured]";
+        gatePath = "[Generated Default: Deepslate Bricks]";
 
         // 3. Default .nbt structure tags
-        innerWallTag = NBTGenerator.generateSimpleStructureTag("minecraft:glass", new byte[][][]{
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}},
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}},
-                {{-1}, {-1}, {-1}, {-1}, {0}, {0}, {0}},
-                {{-1}, {-1}, {-1}, {-1}, {0}, {0}, {0}},
-                {{-1}, {-1}, {-1}, {-1}, {0}, {0}, {0}},
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}},
-                {{0}, {0}, {0}, {0}, {0}, {0}, {0}}
+        innerWallTag = NBTGenerator.generateSimpleStructureTag("minecraft:deepslate_bricks", new byte[][][]{
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}}
+        });
+
+        gateTag = NBTGenerator.generateSimpleStructureTag("minecraft:deepslate_bricks", new byte[][][]{
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, 0, -1}, {-1, 0, -1}, {0, 0, 0}},
+                {{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, 0, -1}, {-1, 0, -1}, {0, 0, 0}},
+                {{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, 0, -1}, {-1, 0, -1}, {0, 0, 0}},
+                {{-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}}
         });
 
         outerWallTag = NBTGenerator.generateSimpleStructureTag("minecraft:deepslate_bricks", new byte[][][]{
-                {{-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}},
-                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {-1, 0}, {-1, 0}},
-                {{-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}, {-1, 0}},
+                {{-1, 0, 0}, {-1, 0, 0}, {-1, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{0, 0, -1}, {0, 0, -1}, {0, 0, -1}, {0, 0, -1}, {0, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {0, 0, -1}, {-1, 0, 0}, {-1, 0, 0}},
+                {{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {0, 0, -1}, {-1, 0, 0}, {-1, 0, 0}},
+                {{-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {0, 0, -1}, {-1, 0, 0}, {-1, 0, 0}},
+                {{0, 0, -1}, {0, 0, -1}, {0, 0, -1}, {0, 0, -1}, {0, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
+                {{-1, 0, 0}, {-1, 0, 0}, {-1, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
         });
 
         innerColumnTag = NBTGenerator.generateSimpleStructureTag("minecraft:stripped_spruce_log", new byte[][][]{
@@ -68,5 +77,20 @@ public class BlockConfig {
                 {{0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {0, 0, 0}},
                 {{-1, 0, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, -1, -1}, {-1, 0, -1}},
         });
+    }
+
+    public static int getX (CompoundTag tag) {
+        ListTag<IntTag> sizeTag = tag.getListTag("size").asIntTagList();
+        return sizeTag.get(0).asInt();
+    }
+
+    public static int getY (CompoundTag tag) {
+        ListTag<IntTag> sizeTag = tag.getListTag("size").asIntTagList();
+        return sizeTag.get(1).asInt();
+    }
+
+    public static int getZ (CompoundTag tag) {
+        ListTag<IntTag> sizeTag = tag.getListTag("size").asIntTagList();
+        return sizeTag.get(2).asInt();
     }
 }

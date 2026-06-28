@@ -59,9 +59,23 @@ public class BlockConfigController {
         if (tag != null) {
             ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
             int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y == 7 && z == 1) tempInnerWallTag = tag;
+            if(x == 7 && y == 7 && (z == 1 || z == 3)) tempInnerWallTag = tag;
             else {
                 pathInnerWall.clear();
+                System.err.println("Error: The size of the selected NBT file is invalid.");
+            }
+        }
+    }
+
+    @FXML
+    protected void onBrowseGate() {
+        CompoundTag tag = handleNbtFileSelection(pathGate);
+        if (tag != null) {
+            ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
+            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
+            if(x == 7 && y == 7 && (z == 1 || z == 3)) tempGateTag = tag;
+            else {
+                pathGate.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");
             }
         }
@@ -73,7 +87,7 @@ public class BlockConfigController {
         if (tag != null) {
             ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
             int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y == 7 && z <= 2) tempOuterWallTag = tag;
+            if(x == 7 && y == 7 && z <= 3) tempOuterWallTag = tag;
             else {
                 pathOuterWall.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");
@@ -90,20 +104,6 @@ public class BlockConfigController {
             if(x == 3 && y == 7 && z == 3) tempInnerColumnTag = tag;
             else {
                 pathInnerColumn.clear();
-                System.err.println("Error: The size of the selected NBT file is invalid.");
-            }
-        }
-    }
-
-    @FXML
-    protected void onBrowseGate() {
-        CompoundTag tag = handleNbtFileSelection(pathGate);
-        if (tag != null) {
-            ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
-            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y <= 7 && z == 7) tempGateTag = tag;
-            else {
-                pathGate.clear();
                 System.err.println("Error: The size of the selected NBT file is invalid.");
             }
         }

@@ -1,7 +1,7 @@
 package io.github.naromil.qcsimple.data;
 
 public class QCUnit {
-    private Boolean wallN, wallW, wallS, wallE;
+    private boolean wallN, wallW, wallS, wallE;
 
     public QCUnit() {
         wallN = wallW = wallS = wallE = false;
@@ -12,13 +12,6 @@ public class QCUnit {
         wallW = unit.wallW;
         wallS = unit.wallS;
         wallE = unit.wallE;
-    }
-
-    public QCUnit(Boolean newN, Boolean newW, Boolean newS, Boolean newE) {
-        wallN = newN;
-        wallW = newW;
-        wallS = newS;
-        wallE = newE;
     }
 
     public void setWallN(boolean val) { wallN = val; }

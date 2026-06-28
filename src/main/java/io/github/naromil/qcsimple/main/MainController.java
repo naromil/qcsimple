@@ -255,7 +255,7 @@ public class MainController {
         try {
             // If DataConverter is not configured, apply default config
             if(!BlockConfig.isConfigured()) {
-                System.out.println("DataConverter is not configured. Applying default config.");
+                System.out.println("Block config is not configured. Applying default config.");
                 BlockConfig.applyDefaultConfig();
             }
 
