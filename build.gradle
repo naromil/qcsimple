@@ -4,6 +4,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'org.beryx.runtime' version '2.0.1'
     id 'edu.sc.seis.launch4j' version '4.0.0'
+    id 'com.gradleup.shadow' version '9.4.2'
 }
 
 group = 'naromil.qcsimple'
@@ -16,7 +17,7 @@ repositories {
 
 javafx {
     version = "21"
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
+    modules = [ 'javafx.controls', 'javafx.fxml', 'javafx.graphics' ]
 }
 
 dependencies {
@@ -43,8 +44,8 @@ runtime {
         appVersion = "1.0.0"
 
         jvmArgs = [
-            '--add-opens=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED',
-            '-Dprism.verbose=false'
+                '--add-opens=javafx.graphics/com.sun.javafx.application=ALL-UNNAMED',
+                '-Dprism.verbose=false'
         ]
 
         // Windows specific configurations
@@ -61,7 +62,22 @@ runtime {
     }
 }
 
+shadowJar {
+    archiveClassifier.set('all')
+
+    // Crucial for JavaFX/Loggers: Merges multi-release JAR properties and SPI configs
+    mergeServiceFiles()
+
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get()
+        )
+    }
+}
+
 launch4j {
+    jarTask = tasks.shadowJar
+
     mainClassName = 'io.github.naromil.qcsimple.main.Launcher'
     icon = "${projectDir}/src/main/resources/io/github/naromil/qcsimple/main/icon.ico"
     outputDir = "libs"
@@ -71,4 +87,5 @@ launch4j {
 
     // Just this line is needed to link the JRE
     bundledJrePath = "runtime"
+    jreMinVersion = "21"
 }
