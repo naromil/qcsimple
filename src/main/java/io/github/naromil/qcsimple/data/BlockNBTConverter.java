@@ -14,7 +14,9 @@ import static java.lang.Math.min;
 public class BlockNBTConverter {
 
     // Put a structure tag in root compound form into a blockMap
-    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure, String rotation) throws IllegalStateException {
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z,
+                                    CompoundTag structure, String rotation, boolean isPreserve)
+                                    throws IllegalStateException {
         if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
         if (structure == null) throw new IllegalArgumentException("structure cannot be null.");
 
@@ -40,12 +42,14 @@ public class BlockNBTConverter {
             CompoundTag originalState = palette.get(stateIndex);
             CompoundTag rotatedState = RotationUtils.rotateBlockState(originalState, rotation);
 
-            blockMap.put(absolutePos, rotatedState);
+            if(!isPreserve || blockMap.get(absolutePos) == null)
+                blockMap.put(absolutePos, rotatedState);
         }
     }
 
-    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure) {
-        putStructure(blockMap, x, y, z, structure, "0");
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z,
+                                    CompoundTag structure, String rotation) {
+        putStructure(blockMap, x, y, z, structure, rotation, false);
     }
 
     // Convert generated blockMap into complete root CompoundTag ready for file IO
@@ -104,7 +108,8 @@ public class BlockNBTConverter {
         return rootCompound;
     }
 
-    public static CompoundTag extractStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, int X, int Y, int Z, String rotation) {
+    public static CompoundTag extractStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z,
+                                               int X, int Y, int Z, String rotation) {
         if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
 
         Map<Point3D, CompoundTag> extractedMap = new HashMap<>();

@@ -53,24 +53,32 @@ public class EditorController {
 
             if (event.getButton() == MouseButton.PRIMARY) {
 
-                if (event.isShiftDown()) {
-                    // Shift + Left-Click: Erase wall placement
-                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false);
+                if (event.isShiftDown() && event.isControlDown()) {
+                    // Shift + Alt + Left-Click: Place gate placement
+                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true, true);
+                    
+                } else if (event.isShiftDown()) {
+                    // Shift + Left-Click: Place inner wall placement
+                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true, false);
 
                 } else {
-                    // Left-Click: Erase block
-                    currentLayerData.remove(clickedPoint);
+                    // Regular Left-Click: Place block
+                    currentLayerData.put(clickedPoint, new QCUnit());
                 }
 
             } else if (event.getButton() == MouseButton.SECONDARY) {
 
-                if (event.isShiftDown()) {
-                    // Shift + Right-Click: Place wall placement
-                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true);
+                if (event.isShiftDown() && event.isControlDown()) {
+                    // Shift + Alt + Right-Click: Remove gate placement
+                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false, true);
+
+                } else if (event.isShiftDown()) {
+                    // Shift + Right-Click: Erase wall placement
+                    handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false, false);
 
                 } else {
-                    // Regular Right Click: Place block
-                    currentLayerData.put(clickedPoint, new QCUnit());
+                    // Right-Click: Erase block
+                    currentLayerData.remove(clickedPoint);
                 }
             }
 
@@ -82,7 +90,7 @@ public class EditorController {
 
     public int getCellSize() { return cellSize; }
 
-    private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ, boolean newState) {
+    private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ, boolean newState, boolean setGate) {
         // 1. Local coordinates inside the cell
         double localX = mouseX % cellSize;
         double localZ = mouseY % cellSize;
@@ -102,16 +110,16 @@ public class EditorController {
 
         // 4. For each edge that the click targets, toggle only if the neighbor exists
         if (min > cellSize / 4.0 || min == distN) {
-            tryToggleWall(centerUnit, gridX, gridZ - 1, newState, Direction.NORTH);
+            tryToggleWall(centerUnit, gridX, gridZ - 1, newState, setGate, Direction.NORTH);
         }
         if (min > cellSize / 4.0 || min == distS) {
-            tryToggleWall(centerUnit, gridX, gridZ + 1, newState, Direction.SOUTH);
+            tryToggleWall(centerUnit, gridX, gridZ + 1, newState, setGate, Direction.SOUTH);
         }
         if (min > cellSize / 4.0 || min == distW) {
-            tryToggleWall(centerUnit, gridX - 1, gridZ, newState, Direction.WEST);
+            tryToggleWall(centerUnit, gridX - 1, gridZ, newState, setGate, Direction.WEST);
         }
         if (min > cellSize / 4.0 || min == distE) {
-            tryToggleWall(centerUnit, gridX + 1, gridZ, newState, Direction.EAST);
+            tryToggleWall(centerUnit, gridX + 1, gridZ, newState, setGate, Direction.EAST);
         }
     }
 
@@ -119,7 +127,7 @@ public class EditorController {
      * Attempts to toggle a shared wall between centerUnit and the neighbor at (nx, nz).
      * Does nothing if the neighbor block is missing or out of bounds.
      */
-    private void tryToggleWall(QCUnit centerUnit, int nx, int nz, boolean wallState, Direction dir) {
+    private void tryToggleWall(QCUnit centerUnit, int nx, int nz, boolean wallState, boolean setGate, Direction dir) {
         // Bounds check
         if (nx < 0 || nx >= gridWidth || nz < 0 || nz >= gridHeight) {
             return;
@@ -131,20 +139,49 @@ public class EditorController {
             return;   // no block to share the wall with
         }
 
-        // Toggle on the center cell
-        switch (dir) {
-            case NORTH -> centerUnit.setWallN(wallState);
-            case SOUTH -> centerUnit.setWallS(wallState);
-            case WEST  -> centerUnit.setWallW(wallState);
-            case EAST  -> centerUnit.setWallE(wallState);
-        }
+        if (setGate) {
+            switch (dir) {
+                case NORTH -> {
+                    if (centerUnit.hasWallN() && neighbour.hasWallS()) {
+                        centerUnit.setGateN(wallState);
+                        neighbour.setGateS(wallState);
+                    }
+                }
+                case SOUTH -> {
+                    if (centerUnit.hasWallS() && neighbour.hasWallN()) {
+                        centerUnit.setGateS(wallState);
+                        neighbour.setGateN(wallState);
+                    }
+                }
+                case WEST -> {
+                    if (centerUnit.hasWallW() && neighbour.hasWallE()) {
+                        centerUnit.setGateW(wallState);
+                        neighbour.setGateE(wallState);
+                    }
+                }
+                case EAST -> {
+                    if (centerUnit.hasWallE() && neighbour.hasWallW()) {
+                        centerUnit.setGateE(wallState);
+                        neighbour.setGateW(wallState);
+                    }
+                }
+            }
+        } else {
+            // Toggle on the center cell
+            switch (dir) {
+                case NORTH -> centerUnit.setWallN(wallState);
+                case SOUTH -> centerUnit.setWallS(wallState);
+                case WEST  -> centerUnit.setWallW(wallState);
+                case EAST  -> centerUnit.setWallE(wallState);
+            }
 
-        // Toggle the inverse on the neighbor
-        switch (dir) {
-            case NORTH -> neighbour.setWallS(wallState);
-            case SOUTH -> neighbour.setWallN(wallState);
-            case WEST  -> neighbour.setWallE(wallState);
-            case EAST  -> neighbour.setWallW(wallState);
+            // Toggle the inverse on the neighbor
+            switch (dir) {
+                case NORTH -> neighbour.setWallS(wallState);
+                case SOUTH -> neighbour.setWallN(wallState);
+                case WEST  -> neighbour.setWallE(wallState);
+                case EAST  -> neighbour.setWallW(wallState);
+            }
         }
     }
 
@@ -173,16 +210,36 @@ public class EditorController {
             gc.setLineWidth(4.0); // Thick lines so they are highly visible
 
             if (unit.hasWallN()) {
-                gc.strokeLine(startX, startZ, startX + cellSize, startZ);
+                if (unit.isGateN()) {
+                    gc.strokeLine(startX, startZ, startX + cellSize * 0.25, startZ);
+                    gc.strokeLine(startX + cellSize * 0.75, startZ, startX + cellSize, startZ);
+                } else {
+                    gc.strokeLine(startX, startZ, startX + cellSize, startZ);
+                }
             }
             if (unit.hasWallS()) {
-                gc.strokeLine(startX, startZ + cellSize, startX + cellSize, startZ + cellSize);
+                if (unit.isGateS()) {
+                    gc.strokeLine(startX, startZ + cellSize, startX + cellSize * 0.25, startZ + cellSize);
+                    gc.strokeLine(startX + cellSize * 0.75, startZ + cellSize, startX + cellSize, startZ + cellSize);
+                } else {
+                    gc.strokeLine(startX, startZ + cellSize, startX + cellSize, startZ + cellSize);
+                }
             }
             if (unit.hasWallW()) {
-                gc.strokeLine(startX, startZ, startX, startZ + cellSize);
+                if (unit.isGateW()) {
+                    gc.strokeLine(startX, startZ, startX, startZ + cellSize * 0.25);
+                    gc.strokeLine(startX, startZ + cellSize * 0.75, startX, startZ + cellSize);
+                } else {
+                    gc.strokeLine(startX, startZ, startX, startZ + cellSize);
+                }
             }
             if (unit.hasWallE()) {
-                gc.strokeLine(startX + cellSize, startZ, startX + cellSize, startZ + cellSize);
+                if (unit.isGateE()) {
+                    gc.strokeLine(startX + cellSize, startZ, startX + cellSize, startZ + cellSize * 0.25);
+                    gc.strokeLine(startX + cellSize, startZ + cellSize * 0.75, startX + cellSize, startZ + cellSize);
+                } else {
+                    gc.strokeLine(startX + cellSize, startZ, startX + cellSize, startZ + cellSize);
+                }
             }
         }
 

@@ -23,7 +23,7 @@ public class BlockConfig {
     protected static CompoundTag gateTag = null;
 
     public static boolean isConfigured() {
-        return frameworkId != null;
+        return frameworkId != null && !frameworkId.isBlank();
     }
 
     // Apply default config conveniently for better testing
