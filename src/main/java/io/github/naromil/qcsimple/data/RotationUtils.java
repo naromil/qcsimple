@@ -94,12 +94,12 @@ public class RotationUtils {
         };
     }
 
-    static Point3D getUnrotatedPos(String rotation, int i, int j, int k) throws IllegalStateException {
+    static Point3D getRotatedPos(String rotation, int i, int j, int k) throws IllegalStateException {
         return switch (rotation) {
             case "0" -> new Point3D(i, j, k);
-            case "90" -> new Point3D(k, j, -i);
+            case "90" -> new Point3D(-k, j, i);
             case "180" -> new Point3D(-i, j, -k);
-            case "270" -> new Point3D(-k, j, i);
+            case "270" -> new Point3D(k, j, -i);
             default -> throw new IllegalStateException("Unexpected rotation value: " + rotation);
         };
     }

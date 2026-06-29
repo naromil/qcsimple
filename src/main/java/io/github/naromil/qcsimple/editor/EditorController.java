@@ -51,7 +51,7 @@ public class EditorController {
 
             Point2D clickedPoint = new Point2D(gridX, gridZ);
 
-            if (event.getButton() == MouseButton.PRIMARY) {
+            if (event.getButton() == MouseButton.SECONDARY) {
 
                 if (event.isShiftDown() && event.isControlDown()) {
                     // Shift + Alt + Left-Click: Place gate placement
@@ -66,7 +66,7 @@ public class EditorController {
                     currentLayerData.put(clickedPoint, new QCUnit());
                 }
 
-            } else if (event.getButton() == MouseButton.SECONDARY) {
+            } else if (event.getButton() == MouseButton.PRIMARY) {
 
                 if (event.isShiftDown() && event.isControlDown()) {
                     // Shift + Alt + Right-Click: Remove gate placement

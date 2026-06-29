@@ -43,6 +43,7 @@ public class EditorState {
         Map<Point3D, CompoundTag> blockMap = UnitBlockConverter.convertLayersToBlockMap(layers);
         rootCompoundTag = BlockNBTConverter.convertMapToTag(blockMap);
     }
+    // Synchronize layers with root compound tag
     public void syncMap() {
         Map<Point3D, CompoundTag> blockMap = BlockNBTConverter.convertTagToMap(rootCompoundTag);
         layers = UnitBlockConverter.convertBlockMapToLayers(blockMap);

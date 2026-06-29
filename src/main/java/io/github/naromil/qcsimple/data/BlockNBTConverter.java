@@ -28,13 +28,7 @@ public class BlockNBTConverter {
             int stateIndex = block.getInt("state");
 
             int i = pos.get(0).asInt(), j = pos.get(1).asInt(), k = pos.get(2).asInt();
-            Point3D rotatedPos = switch (rotation) {
-                case "0" -> new Point3D(i, j, k);
-                case "90" -> new Point3D(-k, j, i);
-                case "180" -> new Point3D(-i, j, -k);
-                case "270" -> new Point3D(k, j, -i);
-                default -> throw new IllegalStateException("Unexpected rotation value: " + rotation);
-            };
+            Point3D rotatedPos = RotationUtils.getRotatedPos(rotation, i, j, k);
 
             Point3D absolutePos = new Point3D(x + rotatedPos.x(), y + rotatedPos.y(), z + rotatedPos.z());
 
@@ -108,8 +102,11 @@ public class BlockNBTConverter {
         return rootCompound;
     }
 
+    // `rotation` here means to rotate another `rotation` to become the original state
+    // This ignores the original positions and applies relative positions
     public static CompoundTag extractStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z,
                                                int X, int Y, int Z, String rotation) {
+
         if (blockMap == null) throw new IllegalArgumentException("blockMap cannot be null.");
 
         Map<Point3D, CompoundTag> extractedMap = new HashMap<>();
@@ -121,15 +118,18 @@ public class BlockNBTConverter {
         for (int absX = minX; absX <= maxX; absX++) {
             for (int absY = minY; absY <= maxY; absY++) {
                 for (int absZ = minZ; absZ <= maxZ; absZ++) {
+
                     CompoundTag blockTag = blockMap.get(new Point3D(absX, absY, absZ));
                     if (blockTag == null) continue;
 
-                    int rotatedX = absX - x;
-                    int rotatedY = absY - y;
-                    int rotatedZ = absZ - z;
+                    int rotatedX = absX - minX;
+                    int rotatedY = absY - minY;
+                    int rotatedZ = absZ - minZ;
 
-                    Point3D originalPos = RotationUtils.getUnrotatedPos(rotation, rotatedX, rotatedY, rotatedZ);
-                    extractedMap.put(originalPos, blockTag);
+                    Point3D originalPos = RotationUtils.getRotatedPos(rotation, rotatedX, rotatedY, rotatedZ);
+                    CompoundTag originalState = RotationUtils.rotateBlockState(blockTag, rotation);
+
+                    extractedMap.put(originalPos, originalState);
                 }
             }
         }

@@ -389,9 +389,12 @@ public class UnitBlockConverter {
 
                     unit.setWallE(true);
                     eastUnit.setWallW(true);
+                    if (isGate) {
+                        unit.setGateE(true);
+                        eastUnit.setGateW(true);
+                    }
 
                     if (!isGate && !extractedInnerWall) {
-
                         BlockConfig.innerWallTag = BlockNBTConverter.extractStructure(blockMap,
                                 absX + 7, absY + 1, absZ + 1,
                                 absX + 9, absY + 7, absZ + 7,
@@ -400,7 +403,6 @@ public class UnitBlockConverter {
                         extractedInnerWall = BlockConfig.innerWallTag != null;
 
                     } else if (isGate && !extractedGate) {
-
                         BlockConfig.gateTag = BlockNBTConverter.extractStructure(blockMap,
                                 absX + 7, absY + 1, absZ + 1,
                                 absX + 9, absY + 7, absZ + 7,
@@ -421,22 +423,26 @@ public class UnitBlockConverter {
 
                     unit.setWallS(true);
                     southUnit.setWallN(true);
+                    if (isGate) {
+                        unit.setGateS(true);
+                        southUnit.setGateN(true);
+                    }
 
                     if (!isGate && !extractedInnerWall) {
-
                         BlockConfig.innerWallTag = BlockNBTConverter.extractStructure(blockMap,
                                 absX + 1, absY + 1, absZ + 7,
                                 absX + 7, absY + 7, absZ + 9,
                                 "0");
+
                         BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
                         extractedInnerWall = BlockConfig.innerWallTag != null;
 
                     } else if (isGate && !extractedGate) {
-
                         BlockConfig.gateTag = BlockNBTConverter.extractStructure(blockMap,
                                 absX + 1, absY + 1, absZ + 7,
                                 absX + 7, absY + 7, absZ + 9,
                                 "0");
+
                         BlockConfig.gatePath = BlockConfig.gateTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
                         extractedGate = BlockConfig.gateTag != null;
 
