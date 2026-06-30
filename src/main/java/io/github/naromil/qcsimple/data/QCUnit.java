@@ -42,4 +42,9 @@ public class QCUnit {
     public boolean isGateS() { return gateS; }
     public boolean isGateW() { return gateW; }
     public boolean isGateE() { return gateE; }
+
+    public boolean hasAnyN() { return wallN || gateN; }
+    public boolean hasAnyS() { return wallS || gateS; }
+    public boolean hasAnyW() { return wallW || gateW; }
+    public boolean hasAnyE() { return wallE || gateE; }
 }

@@ -51,33 +51,35 @@ public class EditorController {
 
             Point2D clickedPoint = new Point2D(gridX, gridZ);
 
-            if (event.getButton() == MouseButton.SECONDARY) {
+            boolean isPlaceAction = (event.getButton() == MouseButton.PRIMARY);
+            boolean isEraseAction = (event.getButton() == MouseButton.SECONDARY);
 
-                if (event.isShiftDown() && event.isControlDown()) {
-                    // Shift + Alt + Left-Click: Place gate placement
+            if (isPlaceAction) {
+                if (event.isControlDown()) {
+                    // Ctrl + Left-Click: Place gate
                     handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true, true);
-                    
                 } else if (event.isShiftDown()) {
-                    // Shift + Left-Click: Place inner wall placement
+                    // Shift + Left-Click: Place inner wall
                     handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, true, false);
-
                 } else {
                     // Regular Left-Click: Place block
                     currentLayerData.put(clickedPoint, new QCUnit());
                 }
-
-            } else if (event.getButton() == MouseButton.PRIMARY) {
-
-                if (event.isShiftDown() && event.isControlDown()) {
-                    // Shift + Alt + Right-Click: Remove gate placement
+            } else if (isEraseAction) {
+                if (event.isControlDown()) {
+                    // Ctrl + Right-Click: Remove gate
                     handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false, true);
-
                 } else if (event.isShiftDown()) {
-                    // Shift + Right-Click: Erase wall placement
+                    // Shift + Right-Click: Erase wall
                     handleWallPlacement(event.getX(), event.getY(), gridX, gridZ, false, false);
-
                 } else {
-                    // Right-Click: Erase block
+                    // Regular Right-Click: Erase block
+
+                    closeWall(gridX, gridZ - 1, Direction.NORTH);
+                    closeWall(gridX, gridZ + 1, Direction.SOUTH);
+                    closeWall(gridX - 1, gridZ, Direction.WEST);
+                    closeWall(gridX + 1, gridZ, Direction.EAST);
+
                     currentLayerData.remove(clickedPoint);
                 }
             }
@@ -185,6 +187,39 @@ public class EditorController {
         }
     }
 
+    private void closeWall (int nx, int nz, Direction dir) {
+        // Bounds check
+        if (nx < 0 || nx >= gridWidth || nz < 0 || nz >= gridHeight) {
+            return;
+        }
+
+        // Get neighbor without creating
+        QCUnit neighbour = currentLayerData.get(new Point2D(nx, nz));
+        if (neighbour == null) {
+            return;   // no block to share the wall with
+        }
+
+        // Toggle the inverse on the neighbor
+        switch (dir) {
+            case NORTH -> {
+                neighbour.setWallS(false);
+                neighbour.setGateS(false);
+            }
+            case SOUTH -> {
+                neighbour.setWallN(false);
+                neighbour.setGateN(false);
+            }
+            case WEST  -> {
+                neighbour.setWallE(false);
+                neighbour.setGateE(false);
+            }
+            case EAST  -> {
+                neighbour.setWallW(false);
+                neighbour.setGateW(false);
+            }
+        }
+    }
+
     // Add a simple enum for readability (optional)
     private enum Direction { NORTH, SOUTH, WEST, EAST }
 
@@ -195,6 +230,11 @@ public class EditorController {
         for (Map.Entry<Point2D, QCUnit> entry : currentLayerData.entrySet()) {
             Point2D pos = entry.getKey();
             QCUnit unit = entry.getValue();
+
+            boolean hasWallN = unit.hasWallN() || !currentLayerData.containsKey(new Point2D(pos.x(), pos.z() - 1));
+            boolean hasWallS = unit.hasWallS() || !currentLayerData.containsKey(new Point2D(pos.x(), pos.z() + 1));
+            boolean hasWallW = unit.hasWallW() || !currentLayerData.containsKey(new Point2D(pos.x() - 1, pos.z()));
+            boolean hasWallE = unit.hasWallE() || !currentLayerData.containsKey(new Point2D(pos.x() + 1, pos.z()));
 
             double startX = pos.x() * cellSize;
             double startZ = pos.z() * cellSize;
@@ -209,7 +249,7 @@ public class EditorController {
             gc.setStroke(Color.web("#222222")); // Dark, thick color for walls
             gc.setLineWidth(4.0); // Thick lines so they are highly visible
 
-            if (unit.hasWallN()) {
+            if (hasWallN) {
                 if (unit.isGateN()) {
                     gc.strokeLine(startX, startZ, startX + cellSize * 0.25, startZ);
                     gc.strokeLine(startX + cellSize * 0.75, startZ, startX + cellSize, startZ);
@@ -217,7 +257,7 @@ public class EditorController {
                     gc.strokeLine(startX, startZ, startX + cellSize, startZ);
                 }
             }
-            if (unit.hasWallS()) {
+            if (hasWallS) {
                 if (unit.isGateS()) {
                     gc.strokeLine(startX, startZ + cellSize, startX + cellSize * 0.25, startZ + cellSize);
                     gc.strokeLine(startX + cellSize * 0.75, startZ + cellSize, startX + cellSize, startZ + cellSize);
@@ -225,7 +265,7 @@ public class EditorController {
                     gc.strokeLine(startX, startZ + cellSize, startX + cellSize, startZ + cellSize);
                 }
             }
-            if (unit.hasWallW()) {
+            if (hasWallW) {
                 if (unit.isGateW()) {
                     gc.strokeLine(startX, startZ, startX, startZ + cellSize * 0.25);
                     gc.strokeLine(startX, startZ + cellSize * 0.75, startX, startZ + cellSize);
@@ -233,7 +273,7 @@ public class EditorController {
                     gc.strokeLine(startX, startZ, startX, startZ + cellSize);
                 }
             }
-            if (unit.hasWallE()) {
+            if (hasWallE) {
                 if (unit.isGateE()) {
                     gc.strokeLine(startX + cellSize, startZ, startX + cellSize, startZ + cellSize * 0.25);
                     gc.strokeLine(startX + cellSize, startZ + cellSize * 0.75, startX + cellSize, startZ + cellSize);

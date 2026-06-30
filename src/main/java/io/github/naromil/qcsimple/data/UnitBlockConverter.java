@@ -134,10 +134,10 @@ public class UnitBlockConverter {
                     // 3.1. Check the internal cross for any conflicting walls
                     // (Adjust the method names if your QCUnit getters are named differently)
                     boolean hasConflictingWalls =
-                            uNW.hasWallE() || uNW.hasWallS() ||
-                                    uNE.hasWallW() || uNE.hasWallS() ||
-                                    uSW.hasWallE() || uSW.hasWallN() ||
-                                    uSE.hasWallW() || uSE.hasWallN();
+                            uNW.hasAnyE() || uNW.hasAnyS() ||
+                                    uNE.hasAnyW() || uNE.hasAnyS() ||
+                                    uSW.hasAnyE() || uSW.hasAnyN() ||
+                                    uSE.hasAnyW() || uSE.hasAnyN();
 
                     // 3.2. Place the column exactly at the intersection
                     // If no walls are conflicting or if NEITHER inner wall and gate are configured
@@ -480,10 +480,10 @@ public class UnitBlockConverter {
                 QCUnit southEastUnit = currentLayer.get(new Point2D(dx + 1, dz + 1));
                 if (!extractedInnerColumn && eastUnit != null && southUnit != null && southEastUnit != null) {
                     boolean hasConflictingWalls =
-                            unit.hasWallE() || unit.hasWallS() ||
-                                    eastUnit.hasWallW() || eastUnit.hasWallS() ||
-                                    southUnit.hasWallE() || southUnit.hasWallN() ||
-                                    southEastUnit.hasWallW() || southEastUnit.hasWallN();
+                            unit.hasAnyE() || unit.hasAnyS() ||
+                                    eastUnit.hasAnyW() || eastUnit.hasAnyS() ||
+                                    southUnit.hasAnyE() || southUnit.hasAnyN() ||
+                                    southEastUnit.hasAnyW() || southEastUnit.hasAnyN();
 
                     if (!hasConflictingWalls || (!extractedInnerWall && !extractedGate)) {
 
