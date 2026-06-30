@@ -277,16 +277,27 @@ public class UnitBlockConverter {
             // Ensure block is the corner of a framework with the lowest (x, y, z)
             if (!blockTag.getString("Name").equals(BlockConfig.frameworkId)) continue;
             if ((pos.x() - ox) % 8 != 0 || (pos.y() - oy) % 8 != 0 || (pos.z() - oz) % 8 != 0) continue;
+
             boolean flag = true;
+
             for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j += 8)
+                for (int j = 0; j < 9; j++)
                     for (int k = 0; k < 9; k++) {
+
                         CompoundTag targetBlockTag = blockMap.get(new Point3D(pos.x() + i, pos.y() + j, pos.z() + k));
-                        if (SpatialUtils.getBoundaryCount(i, j, k) >= 2 && (targetBlockTag == null || !targetBlockTag.getString("Name").equals(BlockConfig.frameworkId))) {
-                            flag = false;
-                            break;
+
+                        if (SpatialUtils.getBoundaryCount(i, j, k) >= 2) {
+                            if ((j == 0 || j == 8) && (targetBlockTag == null || !targetBlockTag.getString("Name").equals(BlockConfig.frameworkId))) {
+                                flag = false;
+                                break;
+
+                            } else if (j > 0 && j < 8 && targetBlockTag == null) {
+                                flag = false;
+                                break;
+                            }
                         }
                     }
+
             if (!flag) continue;
 //            System.out.println("Qualifying framework corner: " + (pos.x() - ox) + ", " + (pos.y() - oy) + ", " + (pos.z() - oz));
 
