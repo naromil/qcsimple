@@ -40,10 +40,14 @@ public class BlockNBTConverter {
                 blockMap.put(absolutePos, rotatedState);
         }
     }
-
-    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z,
-                                    CompoundTag structure, String rotation) {
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, int x, int y, int z, CompoundTag structure, String rotation) {
         putStructure(blockMap, x, y, z, structure, rotation, false);
+    }
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, Point3D pos, CompoundTag structure, String rotation, boolean isPreserve) {
+        putStructure(blockMap, pos.x(), pos.y(), pos.z(), structure, rotation, isPreserve);
+    }
+    public static void putStructure(Map<Point3D, CompoundTag> blockMap, Point3D pos, CompoundTag structure, String rotation) {
+        putStructure(blockMap, pos, structure, rotation, false);
     }
 
     // Convert generated blockMap into complete root CompoundTag ready for file IO

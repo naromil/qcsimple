@@ -1,5 +1,8 @@
 package io.github.naromil.qcsimple.logic;
 
+import io.github.naromil.qcsimple.data.Gate;
+import io.github.naromil.qcsimple.data.InnerColumn;
+import io.github.naromil.qcsimple.data.InnerWall;
 import io.github.naromil.qcsimple.editor.Point2D;
 import io.github.naromil.qcsimple.main.MainApp;
 import net.querz.nbt.tag.CompoundTag;
@@ -122,76 +125,40 @@ public class UnitBlockConverter {
                             }
                         }
 
-                // We treat the current unit (dx, dz) as the North-West corner.
-                QCUnit uNE = currentLayerMap.get(new Point2D(dx + 1, dz));
-                QCUnit uSW = currentLayerMap.get(new Point2D(dx, dz + 1));
-                QCUnit uSE = currentLayerMap.get(new Point2D(dx + 1, dz + 1));
-
-                // 3. Verify all 4 units exist to form a complete square for the inner column
-                if (BlockConfig.innerColumnTag != null && uNE != null && uSW != null && uSE != null) {
-
-                    // 3.1. Check the internal cross for any conflicting walls
-                    // (Adjust the method names if your QCUnit getters are named differently)
-                    boolean hasConflictingWalls =
-                            currentUnit.hasAnyE() || currentUnit.hasAnyS() ||
-                                    uNE.hasAnyW() || uNE.hasAnyS() ||
-                                    uSW.hasAnyE() || uSW.hasAnyN() ||
-                                    uSE.hasAnyW() || uSE.hasAnyN();
-
-                    // 3.2. Place the column exactly at the intersection
-                    // If no walls are conflicting or if NEITHER inner wall and gate are configured
-                    // (I could write a smarter method, but it will be more complicated)
-                    if (!hasConflictingWalls || (BlockConfig.innerWallTag == null && BlockConfig.gateTag == null)) {
-                        // The intersection point converges at x=8, z=8 of the NW unit
-                        int intersectX = dx * 8 + 8;
-                        int intersectY = dy * 8;
-                        int intersectZ = dz * 8 + 8;
-
-                        BlockNBTConverter.putStructure(blockMap, intersectX - 1, intersectY + 1, intersectZ - 1, BlockConfig.innerColumnTag, "0");
-                    }
+                if (BlockConfig.innerColumn.getTag() != null
+                && InnerColumn.canBePlaced(currentLayerMap, dx, dz, BlockConfig.innerWall.isEmpty() && BlockConfig.gate.isEmpty())) {
+                    Point3D relativePos = InnerColumn.getRelativePos(dx, dy, dz);
+                    BlockNBTConverter.putStructure(blockMap, relativePos, BlockConfig.innerColumn.getTag(), "0");
                 }
 
-                // 4.1. Verify it can form an inner wall or a gate with the south unit
-                if (uSW != null && uSW.hasWallN() && currentUnit.hasWallS()) {
-                    int intersectX = dx * 8;
-                    int intersectY = dy * 8;
-                    int intersectZ = dz * 8 + 8;
-
-
-                    boolean isGate = uSW.isGateN() && currentUnit.isGateS();
-                    CompoundTag tag = isGate ? BlockConfig.gateTag : BlockConfig.innerWallTag;
-
-                    if (tag != null) {
-
-                        int zDepth = BlockConfig.getZ(tag);
-                        int outShift = (zDepth == 3) ? 1 : 0;
-
-                        BlockNBTConverter.putStructure(blockMap, intersectX + 1, intersectY + 1, intersectZ - outShift, tag, "0", isGate);
-                    }
+                if(BlockConfig.innerWall.getTag() != null
+                && InnerWall.canBePlacedSouth(currentLayerMap, dx, dz)) {
+                    Point3D relativePos = InnerWall.getRelativePosSouth(dx, dy, dz, BlockConfig.innerWall);
+                    BlockNBTConverter.putStructure(blockMap, relativePos, BlockConfig.innerWall.getTag(), "0");
                 }
 
-                // 4.2. Verify it can form an inner wall or a gate with the east unit
-                if (uNE != null && uNE.hasWallW() && currentUnit.hasWallE()) {
-                    int intersectX = dx * 8 + 8;
-                    int intersectY = dy * 8;
-                    int intersectZ = dz * 8;
+                if(BlockConfig.gate.getTag() != null
+                        && Gate.canBePlacedSouth(currentLayerMap, dx, dz)) {
+                    Point3D relativePos = Gate.getRelativePosSouth(dx, dy, dz, BlockConfig.gate);
+                    BlockNBTConverter.putStructure(blockMap, relativePos, BlockConfig.gate.getTag(), "0", true);
+                }
 
-                    boolean isGate = uNE.isGateW() && currentUnit.isGateE();
-                    CompoundTag tag = isGate ? BlockConfig.gateTag : BlockConfig.innerWallTag;
+                if(BlockConfig.innerWall.getTag() != null
+                        && InnerWall.canBePlacedEast(currentLayerMap, dx, dz)) {
+                    Point3D relativePos = InnerWall.getRelativePosEast(dx, dy, dz, BlockConfig.innerWall);
+                    BlockNBTConverter.putStructure(blockMap, relativePos, BlockConfig.innerWall.getTag(), "90");
+                }
 
-                    if (tag != null) {
-
-                        int zDepth = BlockConfig.getZ(tag);
-                        int outShift = (zDepth == 3) ? 1 : 0;
-
-                        BlockNBTConverter.putStructure(blockMap, intersectX + outShift, intersectY + 1, intersectZ + 1, tag, "90", isGate);
-                    }
+                if(BlockConfig.gate.getTag() != null
+                        && Gate.canBePlacedEast(currentLayerMap, dx, dz)) {
+                    Point3D relativePos = Gate.getRelativePosEast(dx, dy, dz, BlockConfig.gate);
+                    BlockNBTConverter.putStructure(blockMap, relativePos, BlockConfig.gate.getTag(), "90", true);
                 }
 
                 // 5. Process outer walls
-                if (BlockConfig.outerWallTag != null) {
+                if (BlockConfig.outerWall.getTag() != null) {
                     // 5.1. Read the Z-depth of the loaded NBT structure
-                    int zDepth = BlockConfig.getZ(BlockConfig.outerWallTag);
+                    int zDepth = BlockConfig.outerWall.getZ();
 
                     // 5.2. If the wall is 2 blocks deep, the extra layer goes OUTSIDE.
                     // We shift the placement anchor outward by (depth - 1).
@@ -205,25 +172,25 @@ public class UnitBlockConverter {
                     // North face (Exposed to -Z)
                     if (!SpatialUtils.layersContains(layers, dx, dy, dz - 1)) {
                         // Anchor is at X+1 to avoid the column. Z is pushed negative (outward) if thickness > 1.
-                        BlockNBTConverter.putStructure(blockMap, absX + 1, absY + 1, absZ - outShift, BlockConfig.outerWallTag, "0");
+                        BlockNBTConverter.putStructure(blockMap, absX + 1, absY + 1, absZ - outShift, BlockConfig.outerWall.getTag(), "0");
                     }
 
                     // South face (Exposed to +Z)
                     if (!SpatialUtils.layersContains(layers, dx, dy, dz + 1)) {
                         // Anchor is placed at the +Z boundary (8). Z is pushed positive (outward) if thickness > 1.
-                        BlockNBTConverter.putStructure(blockMap, absX + 7, absY + 1, absZ + 8 + outShift, BlockConfig.outerWallTag, "180");
+                        BlockNBTConverter.putStructure(blockMap, absX + 7, absY + 1, absZ + 8 + outShift, BlockConfig.outerWall.getTag(), "180");
                     }
 
                     // East face (Exposed to +X)
                     if (!SpatialUtils.layersContains(layers, dx + 1, dy, dz)) {
                         // Anchor is placed at the +X boundary (8). X is pushed positive (outward) if thickness > 1.
-                        BlockNBTConverter.putStructure(blockMap, absX + 8 + outShift, absY + 1, absZ + 1, BlockConfig.outerWallTag, "90");
+                        BlockNBTConverter.putStructure(blockMap, absX + 8 + outShift, absY + 1, absZ + 1, BlockConfig.outerWall.getTag(), "90");
                     }
 
                     // West face (Exposed to -X)
                     if (!SpatialUtils.layersContains(layers, dx - 1, dy, dz)) {
                         // Anchor is placed at the -X boundary (0). X is pushed negative (outward) if thickness > 1.
-                        BlockNBTConverter.putStructure(blockMap, absX - outShift, absY + 1, absZ + 7, BlockConfig.outerWallTag, "270");
+                        BlockNBTConverter.putStructure(blockMap, absX - outShift, absY + 1, absZ + 7, BlockConfig.outerWall.getTag(), "270");
                     }
                 }
             }
@@ -349,8 +316,7 @@ public class UnitBlockConverter {
             BlockConfig.wallId = blockMap.getOrDefault(new Point3D(baseX - 1, baseY + 1, baseZ),
                     NBTGenerator.convertToBlockTag(BlockConfig.wallId)).getString("Name");
 
-            BlockConfig.outerWallTag = BlockNBTConverter.extractStructure(blockMap, baseX - 7, baseY - 7, baseZ - 1, baseX - 1, baseY - 1, baseZ + 1, "180");
-            BlockConfig.outerWallPath = BlockConfig.outerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
+            BlockConfig.outerWall.setExtracted(BlockNBTConverter.extractStructure(blockMap, baseX - 7, baseY - 7, baseZ - 1, baseX - 1, baseY - 1, baseZ + 1, "180"));
         }
 
         // 4. Detect inner walls and inner columns
@@ -405,21 +371,18 @@ public class UnitBlockConverter {
                     }
 
                     if (!isGate && !extractedInnerWall) {
-                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructure(blockMap,
+                        BlockConfig.innerWall.setExtracted(BlockNBTConverter.extractStructure(blockMap,
                                 absX + 7, absY + 1, absZ + 1,
                                 absX + 9, absY + 7, absZ + 7,
-                                "90");
-                        BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedInnerWall = BlockConfig.innerWallTag != null;
+                                "90"));
+                        extractedInnerWall = !BlockConfig.innerWall.isEmpty();
 
                     } else if (isGate && !extractedGate) {
-                        BlockConfig.gateTag = BlockNBTConverter.extractStructure(blockMap,
+                        BlockConfig.gate.setExtracted(BlockNBTConverter.extractStructure(blockMap,
                                 absX + 7, absY + 1, absZ + 1,
                                 absX + 9, absY + 7, absZ + 7,
-                                "90");
-                        BlockConfig.gatePath = BlockConfig.gateTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedGate = BlockConfig.gateTag != null;
-
+                                "90"));
+                        extractedGate = !BlockConfig.gate.isEmpty();
                     }
                 }
 
@@ -439,22 +402,18 @@ public class UnitBlockConverter {
                     }
 
                     if (!isGate && !extractedInnerWall) {
-                        BlockConfig.innerWallTag = BlockNBTConverter.extractStructure(blockMap,
+                        BlockConfig.innerWall.setExtracted(BlockNBTConverter.extractStructure(blockMap,
                                 absX + 1, absY + 1, absZ + 7,
                                 absX + 7, absY + 7, absZ + 9,
-                                "0");
-
-                        BlockConfig.innerWallPath = BlockConfig.innerWallTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedInnerWall = BlockConfig.innerWallTag != null;
+                                "0"));
+                        extractedInnerWall = !BlockConfig.innerWall.isEmpty();
 
                     } else if (isGate && !extractedGate) {
-                        BlockConfig.gateTag = BlockNBTConverter.extractStructure(blockMap,
+                        BlockConfig.gate.setExtracted(BlockNBTConverter.extractStructure(blockMap,
                                 absX + 1, absY + 1, absZ + 7,
                                 absX + 7, absY + 7, absZ + 9,
-                                "0");
-
-                        BlockConfig.gatePath = BlockConfig.gateTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                        extractedGate = BlockConfig.gateTag != null;
+                                "0"));
+                        extractedGate = !BlockConfig.gate.isEmpty();
 
                     }
                 }
@@ -462,13 +421,11 @@ public class UnitBlockConverter {
         }
 
         if (!extractedInnerWall) {
-            BlockConfig.innerWallTag = null;
-            BlockConfig.innerWallPath = "[Not Configured]";
+            BlockConfig.innerWall.setExtracted(null);
         }
 
         if (!extractedGate) {
-            BlockConfig.gateTag = null;
-            BlockConfig.gatePath = "[Not Configured]";
+            BlockConfig.gate.setExtracted(null);
         }
 
         for (Map.Entry<Integer, Map<Point2D, QCUnit>> layerEntry : layers.entrySet()) {
@@ -502,12 +459,11 @@ public class UnitBlockConverter {
                                 absX + 9, absY + 7, absZ + 9, BlockConfig.frameworkId);
 
                         if (hasInnerColumn) {
-                            BlockConfig.innerColumnTag = BlockNBTConverter.extractStructure(blockMap,
+                            BlockConfig.innerColumn.setExtracted(BlockNBTConverter.extractStructure(blockMap,
                                     absX + 7, absY + 1, absZ + 7,
                                     absX + 9, absY + 7, absZ + 9,
-                                    "0");
-                            BlockConfig.innerColumnPath = BlockConfig.innerColumnTag != null ? "[Extracted from Opened File]" : "[Not Configured]";
-                            extractedInnerColumn = BlockConfig.innerColumnTag != null;
+                                    "0"));
+                            extractedInnerColumn = !BlockConfig.innerColumn.isEmpty();
                         }
                     }
                 }
@@ -515,8 +471,7 @@ public class UnitBlockConverter {
         }
 
         if (!extractedInnerColumn) {
-            BlockConfig.innerColumnTag = null;
-            BlockConfig.innerColumnPath = "[Not Configured]";
+            BlockConfig.innerColumn.setExtracted(null);
         }
     }
 

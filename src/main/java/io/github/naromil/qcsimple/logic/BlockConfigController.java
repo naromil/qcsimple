@@ -1,5 +1,9 @@
 package io.github.naromil.qcsimple.logic;
 
+import io.github.naromil.qcsimple.data.Gate;
+import io.github.naromil.qcsimple.data.InnerColumn;
+import io.github.naromil.qcsimple.data.InnerWall;
+import io.github.naromil.qcsimple.data.OuterWall;
 import io.github.naromil.qcsimple.editor.EditorState;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -39,84 +43,55 @@ public class BlockConfigController {
         blocWall.setText(BlockConfig.wallId != null ? BlockConfig.wallId : "");
 
         // 2. Load NBT File Paths (so the user sees what was previously selected)
-        pathInnerWall.setText(BlockConfig.innerWallPath != null ? BlockConfig.innerWallPath : "");
-        pathOuterWall.setText(BlockConfig.outerWallPath != null ? BlockConfig.outerWallPath : "");
-        pathInnerColumn.setText(BlockConfig.innerColumnPath != null ? BlockConfig.innerColumnPath : "");
-        pathGate.setText(BlockConfig.gatePath != null ? BlockConfig.gatePath : "");
+        pathInnerWall.setText(BlockConfig.innerWall.getPath() != null ? BlockConfig.innerWall.getPath() : "");
+        pathOuterWall.setText(BlockConfig.outerWall.getPath() != null ? BlockConfig.outerWall.getPath() : "");
+        pathInnerColumn.setText(BlockConfig.innerColumn.getPath() != null ? BlockConfig.innerColumn.getPath() : "");
+        pathGate.setText(BlockConfig.gate.getPath() != null ? BlockConfig.gate.getPath() : "");
 
         // 3. Pre-load the temporary tags with the existing global tags
-        tempInnerWallTag = BlockConfig.innerWallTag;
-        tempOuterWallTag = BlockConfig.outerWallTag;
-        tempInnerColumnTag = BlockConfig.innerColumnTag;
-        tempGateTag = BlockConfig.gateTag;
+        tempInnerWallTag = BlockConfig.innerWall.getTag();
+        tempOuterWallTag = BlockConfig.outerWall.getTag();
+        tempInnerColumnTag = BlockConfig.innerColumn.getTag();
+        tempGateTag = BlockConfig.gate.getTag();
     }
 
     // --- File Browse Actions ---
 
     @FXML
     protected void onBrowseInnerWall() {
-        CompoundTag tag = handleNbtFileSelection(pathInnerWall);
-        if (tag != null) {
-            ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
-            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y == 7 && (z == 1 || z == 3)) tempInnerWallTag = tag;
-            else {
-                pathInnerWall.clear();
-                System.err.println("Error: The size of the selected NBT file is invalid.");
-            }
-        }
+        tempInnerWallTag = configureComponent(tempInnerWallTag, pathInnerWall, InnerWall::isValidSize);
+        if(tempInnerWallTag == null) pathInnerWall.clear();
     }
 
     @FXML
     protected void onBrowseGate() {
-        CompoundTag tag = handleNbtFileSelection(pathGate);
-        if (tag != null) {
-            ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
-            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y == 7 && (z == 1 || z == 3)) tempGateTag = tag;
-            else {
-                pathGate.clear();
-                System.err.println("Error: The size of the selected NBT file is invalid.");
-            }
-        }
+        tempGateTag = configureComponent(tempGateTag, pathGate, Gate::isValidSize);
+        if(tempGateTag == null) pathGate.clear();
     }
 
     @FXML
     protected void onBrowseOuterWall() {
-        CompoundTag tag = handleNbtFileSelection(pathOuterWall);
-        if (tag != null) {
-            ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
-            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 7 && y == 7 && z <= 3) tempOuterWallTag = tag;
-            else {
-                pathOuterWall.clear();
-                System.err.println("Error: The size of the selected NBT file is invalid.");
-            }
-        }
+        tempOuterWallTag = configureComponent(tempOuterWallTag, pathOuterWall, OuterWall::isValidSize);
+        if(tempOuterWallTag == null) pathOuterWall.clear();
     }
 
     @FXML
     protected void onBrowseInnerColumn() {
-        CompoundTag tag = handleNbtFileSelection(pathInnerColumn);
-        if (tag != null) {
-            ListTag<IntTag> size = (ListTag<IntTag>) tag.get("size", ListTag.class);
-            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
-            if(x == 3 && y == 7 && z == 3) tempInnerColumnTag = tag;
-            else {
-                pathInnerColumn.clear();
-                System.err.println("Error: The size of the selected NBT file is invalid.");
-            }
-        }
+        tempInnerColumnTag = configureComponent(tempInnerColumnTag, pathInnerColumn, InnerColumn::isValidSize);
+        if(tempInnerColumnTag == null) pathInnerColumn.clear();
     }
 
-    /**
-     * Helper method to open a FileChooser, parse the NBT, and update the UI TextField.
-     */
-    private CompoundTag handleNbtFileSelection(TextField displayField) {
+    @FunctionalInterface
+    interface TriPredicate {
+        boolean run(int x, int y, int z);
+    }
+
+    private CompoundTag configureComponent(CompoundTag currentTag, TextField displayField, TriPredicate isValidSize) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select NBT Structure");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Minecraft NBT Files (*.nbt)", "*.nbt"));
 
+        CompoundTag newTag = null;
         // Open dialog over the current window
         File file = fileChooser.showOpenDialog(displayField.getScene().getWindow());
 
@@ -127,7 +102,7 @@ public class BlockConfigController {
 
                 if (namedTag.getTag() instanceof CompoundTag) {
                     displayField.setText(file.getAbsolutePath());
-                    return (CompoundTag) namedTag.getTag();
+                    newTag = (CompoundTag) namedTag.getTag();
                 } else {
                     System.err.println("Error: The selected NBT file does not contain a CompoundTag root.");
                 }
@@ -135,7 +110,18 @@ public class BlockConfigController {
                 System.err.println("Failed to read NBT file: " + e.getMessage());
             }
         }
-        return null;
+
+        if (newTag != null) {
+            ListTag<IntTag> size = (ListTag<IntTag>) newTag.get("size", ListTag.class);
+            int x = size.get(0).asInt(), y = size.get(1).asInt(), z = size.get(2).asInt();
+
+            if (isValidSize.run(x, y, z)) {
+                return newTag; // Return the new valid tag
+            } else {
+                System.err.println("Error: The size of the selected NBT file is invalid.");
+            }
+        }
+        return currentTag; // Return the unchanged tag if validation fails or newTag is null
     }
 
     // --- Save and Cancel Actions ---
@@ -150,16 +136,10 @@ public class BlockConfigController {
         BlockConfig.wallId = blocWall.getText().trim();
 
         // 2. Save File Paths
-        BlockConfig.innerWallPath = pathInnerWall.getText().trim();
-        BlockConfig.outerWallPath = pathOuterWall.getText().trim();
-        BlockConfig.innerColumnPath = pathInnerColumn.getText().trim();
-        BlockConfig.gatePath = pathGate.getText().trim();
-
-        // 3. Commit the CompoundTags to the global DataConverter
-        BlockConfig.innerWallTag = tempInnerWallTag;
-        BlockConfig.outerWallTag = tempOuterWallTag;
-        BlockConfig.innerColumnTag = tempInnerColumnTag;
-        BlockConfig.gateTag = tempGateTag;
+        BlockConfig.innerWall.set(tempInnerWallTag, pathInnerWall.getText().trim());
+        BlockConfig.outerWall.set(tempOuterWallTag, pathOuterWall.getText().trim());
+        BlockConfig.innerColumn.set(tempInnerColumnTag, pathInnerColumn.getText().trim());
+        BlockConfig.gate.set(tempGateTag, pathGate.getText().trim());
 
         System.out.println("Saved Block ID and NBT Configuration successfully.");
         EditorState.getInstance().setDirty(true);
