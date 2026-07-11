@@ -1,7 +1,7 @@
 package io.github.naromil.qcsimple.main;
 
-import io.github.naromil.qcsimple.data.NBTIO;
-import io.github.naromil.qcsimple.data.BlockConfig;
+import io.github.naromil.qcsimple.logic.NBTIO;
+import io.github.naromil.qcsimple.logic.BlockConfig;
 import io.github.naromil.qcsimple.editor.EditorController;
 import io.github.naromil.qcsimple.editor.EditorState;
 import javafx.fxml.FXML;
@@ -232,7 +232,7 @@ public class MainController {
     protected void onSaveAsMenuAction() {
         EditorState state = EditorState.getInstance();
         if (!state.isDirty()) {
-//            showErrorDialog("Save Error", "No structure data found in memory to save.");
+//            showErrorDialog("Save Error", "No structure logic found in memory to save.");
             return;
         }
 
@@ -268,11 +268,11 @@ public class MainController {
             // Update state info
             state.setCurrentFile(file);
             state.setDirty(false);
-            System.out.println("Successfully saved data to: " + file.getAbsolutePath());
+            System.out.println("Successfully saved logic to: " + file.getAbsolutePath());
 
         } catch (Exception e) {
 //            e.printStackTrace(); // Keep this on while debugging!
-            showErrorDialog("Save Failed", "Could not commit structure data to disk:\n" + e.getMessage());
+            showErrorDialog("Save Failed", "Could not commit structure logic to disk:\n" + e.getMessage());
         }
     }
 }

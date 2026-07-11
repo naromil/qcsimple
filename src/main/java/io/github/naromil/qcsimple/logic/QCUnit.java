@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple.data;
+package io.github.naromil.qcsimple.logic;
 
 public class QCUnit {
     private boolean wallN, wallW, wallS, wallE;

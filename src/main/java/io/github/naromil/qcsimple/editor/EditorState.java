@@ -1,9 +1,9 @@
 package io.github.naromil.qcsimple.editor;
 
-import io.github.naromil.qcsimple.data.UnitBlockConverter;
-import io.github.naromil.qcsimple.data.BlockNBTConverter;
-import io.github.naromil.qcsimple.data.QCUnit;
-import io.github.naromil.qcsimple.data.Point3D;
+import io.github.naromil.qcsimple.logic.UnitBlockConverter;
+import io.github.naromil.qcsimple.logic.BlockNBTConverter;
+import io.github.naromil.qcsimple.logic.QCUnit;
+import io.github.naromil.qcsimple.logic.Point3D;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;

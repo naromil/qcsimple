@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple.data;
+package io.github.naromil.qcsimple.logic;
 
 import io.github.naromil.qcsimple.editor.Point2D;
 
@@ -19,7 +19,7 @@ public class SpatialUtils {
         return boundaryCache[x][y][z];
     }
 
-    // 3. Private helper to build the data structure
+    // 3. Private helper to build the logic structure
     private static void computeBoundaryCache() {
         System.out.println("Initializing boundary count cache..."); // Optional log
         boundaryCache = new int[9][9][9];

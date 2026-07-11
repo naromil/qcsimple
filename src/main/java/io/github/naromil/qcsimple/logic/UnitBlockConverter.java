@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple.data;
+package io.github.naromil.qcsimple.logic;
 
 import io.github.naromil.qcsimple.editor.Point2D;
 import io.github.naromil.qcsimple.main.MainApp;
@@ -17,10 +17,10 @@ public class UnitBlockConverter {
         // Guard clause: Prevent crashes if exporting an empty canvas
         if (layers.isEmpty()) {
             System.out.println("Warning: Attempted to export empty layers.");
-            return new HashMap<Point3D, CompoundTag>();
+            return new HashMap<>();
         }
 
-        Map<Point3D, CompoundTag> blockMap = new HashMap<Point3D, CompoundTag>();
+        Map<Point3D, CompoundTag> blockMap = new HashMap<>();
 
         for (Map.Entry<Integer, Map<Point2D, QCUnit>> layerEntry : layers.entrySet()) {
             int dy = layerEntry.getKey();
@@ -123,7 +123,6 @@ public class UnitBlockConverter {
                         }
 
                 // We treat the current unit (dx, dz) as the North-West corner.
-                QCUnit uNW = currentUnit;
                 QCUnit uNE = currentLayerMap.get(new Point2D(dx + 1, dz));
                 QCUnit uSW = currentLayerMap.get(new Point2D(dx, dz + 1));
                 QCUnit uSE = currentLayerMap.get(new Point2D(dx + 1, dz + 1));
@@ -134,7 +133,7 @@ public class UnitBlockConverter {
                     // 3.1. Check the internal cross for any conflicting walls
                     // (Adjust the method names if your QCUnit getters are named differently)
                     boolean hasConflictingWalls =
-                            uNW.hasAnyE() || uNW.hasAnyS() ||
+                            currentUnit.hasAnyE() || currentUnit.hasAnyS() ||
                                     uNE.hasAnyW() || uNE.hasAnyS() ||
                                     uSW.hasAnyE() || uSW.hasAnyN() ||
                                     uSE.hasAnyW() || uSE.hasAnyN();
@@ -153,13 +152,13 @@ public class UnitBlockConverter {
                 }
 
                 // 4.1. Verify it can form an inner wall or a gate with the south unit
-                if (uSW != null && uSW.hasWallN() && uNW.hasWallS()) {
+                if (uSW != null && uSW.hasWallN() && currentUnit.hasWallS()) {
                     int intersectX = dx * 8;
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8 + 8;
 
 
-                    boolean isGate = uSW.isGateN() && uNW.isGateS();
+                    boolean isGate = uSW.isGateN() && currentUnit.isGateS();
                     CompoundTag tag = isGate ? BlockConfig.gateTag : BlockConfig.innerWallTag;
 
                     if (tag != null) {
@@ -172,12 +171,12 @@ public class UnitBlockConverter {
                 }
 
                 // 4.2. Verify it can form an inner wall or a gate with the east unit
-                if (uNE != null && uNE.hasWallW() && uNW.hasWallE()) {
+                if (uNE != null && uNE.hasWallW() && currentUnit.hasWallE()) {
                     int intersectX = dx * 8 + 8;
                     int intersectY = dy * 8;
                     int intersectZ = dz * 8;
 
-                    boolean isGate = uNE.isGateW() && uNW.isGateE();
+                    boolean isGate = uNE.isGateW() && currentUnit.isGateE();
                     CompoundTag tag = isGate ? BlockConfig.gateTag : BlockConfig.innerWallTag;
 
                     if (tag != null) {
@@ -390,7 +389,7 @@ public class UnitBlockConverter {
                 int absY = oy + dy * 8;
                 int absZ = oz + dz * 8;
 
-                // 1. Try extracting innerWall with the east side
+                // 1. Try extracting the innerWall with the east side
                 QCUnit eastUnit = currentLayer.get(new Point2D(dx + 1, dz));
                 if (eastUnit != null && hasAnyBlock(blockMap,
                         absX + 7, absY + 1, absZ + 2,
@@ -424,7 +423,7 @@ public class UnitBlockConverter {
                     }
                 }
 
-                // 2. Try extracting innerWall with the south side
+                // 2. Try extracting the innerWall with the south side
                 QCUnit southUnit = currentLayer.get(new Point2D(dx, dz + 1));
                 if (southUnit != null && hasAnyBlock(blockMap,
                         absX + 2, absY + 1, absZ + 7,
@@ -485,7 +484,7 @@ public class UnitBlockConverter {
                 int absY = oy + dy * 8;
                 int absZ = oz + dz * 8;
 
-                // 3. Try extracting innerColumn within the 2x2 grid
+                // 3. Try extracting the innerColumn within the 2x2 grid
                 QCUnit eastUnit = currentLayer.get(new Point2D(dx + 1, dz));
                 QCUnit southUnit = currentLayer.get(new Point2D(dx, dz + 1));
                 QCUnit southEastUnit = currentLayer.get(new Point2D(dx + 1, dz + 1));

@@ -1,6 +1,6 @@
 package io.github.naromil.qcsimple.editor;
 
-import io.github.naromil.qcsimple.data.QCUnit;
+import io.github.naromil.qcsimple.logic.QCUnit;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;

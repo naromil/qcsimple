@@ -1,4 +1,4 @@
-package io.github.naromil.qcsimple.data;
+package io.github.naromil.qcsimple.logic;
 
 public record Point3D(int x, int y, int z) {
 }
