@@ -18,11 +18,11 @@ Users can then configure block choices and upload customized .nbt files to deter
 
 ### Sample Interface
 
-<img width="1090" height="777" alt="Screenshot_20260625_220146" src="https://github.com/user-attachments/assets/fb18221e-84af-4041-a3cf-05ae67d68033" />
+<img width="1090" height="777" alt="Screenshot_20260701_230150" src="https://github.com/user-attachments/assets/22a4aaee-9e69-4fb6-bdcd-4ee01e4520de" />
 
 ### Sample Building
 
-<img width="1920" height="1016" alt="2026-06-25_21 46 26" src="https://github.com/user-attachments/assets/7af88247-7fd5-42b3-b486-0c6459e41a68" />
+<img width="1920" height="1080" alt="2026-07-01_18 13 06" src="https://github.com/user-attachments/assets/85d0ef3c-9216-43e5-9133-29a023569f09" />
 
 ## Quarterchunk Units
 
