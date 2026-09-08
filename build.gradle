@@ -32,7 +32,7 @@ test {
 }
 
 application {
-    mainClass = 'io.github.naromil.qcsimple.main.Launcher'
+    mainClass = 'com.naromil.qcsimple.main.Launcher'
 }
 
 runtime {
@@ -51,13 +51,13 @@ runtime {
         // Windows specific configurations
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             installerOptions = ['--win-dir-chooser', '--win-shortcut', '--win-menu']
-            imageOptions = ['--icon', 'src/main/resources/io/github/naromil/qcsimple/main/icon.ico']
+            imageOptions = ['--icon', 'src/main/resources/com/naromil/qcsimple/main/icon.ico']
         }
 
         // Linux specific configurations
         if (System.getProperty("os.name").toLowerCase().contains("linux")) {
             installerOptions = ['--linux-shortcut', '--linux-deb-maintainer', 'your-email@domain.com']
-            imageOptions = ['--icon', 'src/main/resources/io/github/naromil/qcsimple/main/icon.png']
+            imageOptions = ['--icon', 'src/main/resources/com/naromil/qcsimple/main/icon.png']
         }
     }
 }
@@ -78,8 +78,8 @@ shadowJar {
 launch4j {
     jarTask = tasks.shadowJar
 
-    mainClassName = 'io.github.naromil.qcsimple.main.Launcher'
-    icon = "${projectDir}/src/main/resources/io/github/naromil/qcsimple/main/icon.ico"
+    mainClassName = 'com.naromil.qcsimple.main.Launcher'
+    icon = "${projectDir}/src/main/resources/com/naromil/qcsimple/main/icon.ico"
     outputDir = "libs"
     dontWrapJar = false
     headerType = "gui"

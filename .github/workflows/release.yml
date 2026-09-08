@@ -68,7 +68,7 @@ jobs:
           Terminal=false
           EOF
 
-          cp src/main/resources/io/github/naromil/qcsimple/main/icon.png AppDir/qcsimple.png
+          cp src/main/resources/com/naromil/qcsimple/main/icon.png AppDir/qcsimple.png
 
       - name: Build AppImage
         if: matrix.os == 'ubuntu-latest'
