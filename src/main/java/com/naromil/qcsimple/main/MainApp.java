@@ -11,10 +11,6 @@ import java.util.Objects;
 
 public class MainApp extends Application {
 
-    private static MainController mainController;
-
-    public static int getCellSize() { return mainController.getCellSize(); }
-
     @Override
     public void start(Stage stage) throws IOException {
         // 1. Get the visual bounds of the primary screen
@@ -33,7 +29,7 @@ public class MainApp extends Application {
         Scene scene = new Scene(fxmlLoader.load(), calculatedWidth, calculatedHeight);
 
         // Extract the controller instance out of the loader context
-        mainController = fxmlLoader.getController();
+        MainController mainController = fxmlLoader.getController();
         // Register global page tracking listener logic safely
         mainController.setupGlobalShortcuts(scene);
 

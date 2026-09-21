@@ -1,9 +1,6 @@
-package com.naromil.qcsimple.logic;
+package com.naromil.qcsimple.main;
 
-import com.naromil.qcsimple.data.Gate;
-import com.naromil.qcsimple.data.InnerColumn;
-import com.naromil.qcsimple.data.InnerWall;
-import com.naromil.qcsimple.data.OuterWall;
+import com.naromil.qcsimple.data.BlockPalette;
 import com.naromil.qcsimple.editor.EditorState;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
@@ -19,6 +16,9 @@ import java.io.File;
 
 @SuppressWarnings("unchecked")
 public class BlockConfigController {
+
+    private final BlockPalette palette = BlockPalette.getInstance();
+
     // String ID Fields
     @FXML
     protected TextField blocFramework, blocColumn, blocRow, blocFloor, blocWall;
@@ -36,48 +36,48 @@ public class BlockConfigController {
     @FXML
     public void initialize() {
         // 1. Load String IDs
-        blocFramework.setText(BlockConfig.frameworkId != null ? BlockConfig.frameworkId : "");
-        blocColumn.setText(BlockConfig.columnId != null ? BlockConfig.columnId : "");
-        blocRow.setText(BlockConfig.rowId != null ? BlockConfig.rowId : "");
-        blocFloor.setText(BlockConfig.floorId != null ? BlockConfig.floorId : "");
-        blocWall.setText(BlockConfig.wallId != null ? BlockConfig.wallId : "");
+        blocFramework.setText(palette.frameworkBlock().getBlockId() != null ? palette.frameworkBlock().getBlockId() : "");
+        blocColumn.setText(palette.columnBlock().getBlockId() != null ? palette.columnBlock().getBlockId() : "");
+        blocRow.setText(palette.rowBlock().getBlockId() != null ? palette.rowBlock().getBlockId() : "");
+        blocFloor.setText(palette.floorBlock().getBlockId() != null ? palette.floorBlock().getBlockId() : "");
+        blocWall.setText(palette.wallBlock().getBlockId() != null ? palette.wallBlock().getBlockId() : "");
 
         // 2. Load NBT File Paths (so the user sees what was previously selected)
-        pathInnerWall.setText(BlockConfig.innerWall.getPath() != null ? BlockConfig.innerWall.getPath() : "");
-        pathOuterWall.setText(BlockConfig.outerWall.getPath() != null ? BlockConfig.outerWall.getPath() : "");
-        pathInnerColumn.setText(BlockConfig.innerColumn.getPath() != null ? BlockConfig.innerColumn.getPath() : "");
-        pathGate.setText(BlockConfig.gate.getPath() != null ? BlockConfig.gate.getPath() : "");
+        pathInnerWall.setText(palette.innerWall().getPath() != null ? palette.innerWall().getPath() : "");
+        pathOuterWall.setText(palette.outerWall().getPath() != null ? palette.outerWall().getPath() : "");
+        pathInnerColumn.setText(palette.innerColumn().getPath() != null ? palette.innerColumn().getPath() : "");
+        pathGate.setText(palette.gate().getPath() != null ? palette.gate().getPath() : "");
 
         // 3. Pre-load the temporary tags with the existing global tags
-        tempInnerWallTag = BlockConfig.innerWall.getTag();
-        tempOuterWallTag = BlockConfig.outerWall.getTag();
-        tempInnerColumnTag = BlockConfig.innerColumn.getTag();
-        tempGateTag = BlockConfig.gate.getTag();
+        tempInnerWallTag = palette.innerWall().getTag();
+        tempOuterWallTag = palette.outerWall().getTag();
+        tempInnerColumnTag = palette.innerColumn().getTag();
+        tempGateTag = palette.gate().getTag();
     }
 
     // --- File Browse Actions ---
 
     @FXML
     protected void onBrowseInnerWall() {
-        tempInnerWallTag = configureComponent(tempInnerWallTag, pathInnerWall, InnerWall::isValidSize);
+        tempInnerWallTag = configureComponent(tempInnerWallTag, pathInnerWall, palette.innerWall()::isValidSize);
         if(tempInnerWallTag == null) pathInnerWall.clear();
     }
 
     @FXML
     protected void onBrowseGate() {
-        tempGateTag = configureComponent(tempGateTag, pathGate, Gate::isValidSize);
+        tempGateTag = configureComponent(tempGateTag, pathGate, palette.gate()::isValidSize);
         if(tempGateTag == null) pathGate.clear();
     }
 
     @FXML
     protected void onBrowseOuterWall() {
-        tempOuterWallTag = configureComponent(tempOuterWallTag, pathOuterWall, OuterWall::isValidSize);
+        tempOuterWallTag = configureComponent(tempOuterWallTag, pathOuterWall, palette.outerWall()::isValidSize);
         if(tempOuterWallTag == null) pathOuterWall.clear();
     }
 
     @FXML
     protected void onBrowseInnerColumn() {
-        tempInnerColumnTag = configureComponent(tempInnerColumnTag, pathInnerColumn, InnerColumn::isValidSize);
+        tempInnerColumnTag = configureComponent(tempInnerColumnTag, pathInnerColumn, palette.innerColumn()::isValidSize);
         if(tempInnerColumnTag == null) pathInnerColumn.clear();
     }
 
@@ -129,17 +129,17 @@ public class BlockConfigController {
     @FXML
     protected void onSaveAction() {
         // 1. Save String IDs
-        BlockConfig.frameworkId = blocFramework.getText().trim();
-        BlockConfig.columnId = blocColumn.getText().trim();
-        BlockConfig.rowId = blocRow.getText().trim();
-        BlockConfig.floorId = blocFloor.getText().trim();
-        BlockConfig.wallId = blocWall.getText().trim();
+        palette.frameworkBlock().setBlockId(blocFramework.getText().trim());
+        palette.columnBlock().setBlockId(blocColumn.getText().trim());
+        palette.rowBlock().setBlockId(blocRow.getText().trim());
+        palette.floorBlock().setBlockId(blocFloor.getText().trim());
+        palette.wallBlock().setBlockId(blocWall.getText().trim());
 
         // 2. Save File Paths
-        BlockConfig.innerWall.set(tempInnerWallTag, pathInnerWall.getText().trim());
-        BlockConfig.outerWall.set(tempOuterWallTag, pathOuterWall.getText().trim());
-        BlockConfig.innerColumn.set(tempInnerColumnTag, pathInnerColumn.getText().trim());
-        BlockConfig.gate.set(tempGateTag, pathGate.getText().trim());
+        palette.innerWall().set(tempInnerWallTag, pathInnerWall.getText().trim());
+        palette.outerWall().set(tempOuterWallTag, pathOuterWall.getText().trim());
+        palette.innerColumn().set(tempInnerColumnTag, pathInnerColumn.getText().trim());
+        palette.gate().set(tempGateTag, pathGate.getText().trim());
 
         System.out.println("Saved Block ID and NBT Configuration successfully.");
         EditorState.getInstance().setDirty(true);

@@ -4,7 +4,7 @@ import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.IntTag;
 import net.querz.nbt.tag.ListTag;
 
-public abstract class QCComponent {
+public abstract class QCComponent implements UnitComponent {
     private String path = "";
     private CompoundTag tag = null;
 

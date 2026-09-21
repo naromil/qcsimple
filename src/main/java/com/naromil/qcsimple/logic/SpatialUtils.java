@@ -1,6 +1,6 @@
 package com.naromil.qcsimple.logic;
 
-import com.naromil.qcsimple.editor.Point2D;
+import com.naromil.qcsimple.geom.Point2D;
 
 import java.util.Map;
 

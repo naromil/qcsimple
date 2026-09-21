@@ -2,8 +2,10 @@ package com.naromil.qcsimple.editor;
 
 import com.naromil.qcsimple.logic.UnitBlockConverter;
 import com.naromil.qcsimple.logic.BlockNBTConverter;
+import com.naromil.qcsimple.data.BlockPalette;
+import com.naromil.qcsimple.geom.Point2D;
+import com.naromil.qcsimple.geom.Point3D;
 import com.naromil.qcsimple.logic.QCUnit;
-import com.naromil.qcsimple.logic.Point3D;
 import net.querz.nbt.tag.CompoundTag;
 
 import java.io.File;
@@ -40,13 +42,13 @@ public class EditorState {
 
     // Synchronize root compound tag with layers
     public void syncRootCompoundTag() {
-        Map<Point3D, CompoundTag> blockMap = UnitBlockConverter.convertLayersToBlockMap(layers);
+        Map<Point3D, CompoundTag> blockMap = UnitBlockConverter.convertLayersToBlockMap(layers, BlockPalette.getInstance());
         rootCompoundTag = BlockNBTConverter.convertMapToTag(blockMap);
     }
     // Synchronize layers with root compound tag
     public void syncMap() {
         Map<Point3D, CompoundTag> blockMap = BlockNBTConverter.convertTagToMap(rootCompoundTag);
-        layers = UnitBlockConverter.convertBlockMapToLayers(blockMap);
+        layers = UnitBlockConverter.convertBlockMapToLayers(blockMap, BlockPalette.getInstance());
     }
 
     public boolean isDirty() { return isDirty; }

@@ -1,5 +1,6 @@
 package com.naromil.qcsimple.logic;
 
+import com.naromil.qcsimple.geom.Point3D;
 import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.IntTag;
 import net.querz.nbt.tag.ListTag;

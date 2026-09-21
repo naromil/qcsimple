@@ -1,5 +1,6 @@
 package com.naromil.qcsimple.editor;
 
+import com.naromil.qcsimple.geom.Point2D;
 import com.naromil.qcsimple.logic.QCUnit;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -89,8 +90,6 @@ public class EditorController {
             redraw();
         }
     }
-
-    public int getCellSize() { return cellSize; }
 
     private void handleWallPlacement(double mouseX, double mouseY, int gridX, int gridZ, boolean newState, boolean setGate) {
         // 1. Local coordinates inside the cell

@@ -1,7 +1,7 @@
 package com.naromil.qcsimple.main;
 
+import com.naromil.qcsimple.data.BlockPalette;
 import com.naromil.qcsimple.logic.NBTIO;
-import com.naromil.qcsimple.logic.BlockConfig;
 import com.naromil.qcsimple.editor.EditorController;
 import com.naromil.qcsimple.editor.EditorState;
 import javafx.fxml.FXML;
@@ -102,10 +102,6 @@ public class MainController {
         editorComponentController.loadLayerData(state.getMapForLayer(activeLayer));
     }
 
-    public int getCellSize() {
-        return editorComponentController.getCellSize();
-    }
-
     @FXML
     protected void onOpenConfigMenuAction() {
         try {
@@ -138,7 +134,7 @@ public class MainController {
 
     @FXML
     protected void onApplyDefaultConfigAction() {
-        BlockConfig.applyDefaultConfig();
+        BlockPalette.getInstance().applyDefaultConfig();
         EditorState.getInstance().setDirty(true);
         System.out.println("Applied default Block ID and NBT Configuration successfully.");
     }
@@ -254,9 +250,9 @@ public class MainController {
     private void saveNbtToFile(File file) {
         try {
             // If DataConverter is not configured, apply default config
-            if(!BlockConfig.isConfigured()) {
+            if(!BlockPalette.getInstance().isConfigured()) {
                 System.out.println("Block config is not configured. Applying default config.");
-                BlockConfig.applyDefaultConfig();
+                BlockPalette.getInstance().applyDefaultConfig();
             }
 
             EditorState state = EditorState.getInstance();

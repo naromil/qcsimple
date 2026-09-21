@@ -1,20 +1,24 @@
 package com.naromil.qcsimple.data;
 
-import com.naromil.qcsimple.editor.Point2D;
 import com.naromil.qcsimple.logic.NBTGenerator;
-import com.naromil.qcsimple.logic.Point3D;
-import com.naromil.qcsimple.logic.QCUnit;
-import com.naromil.qcsimple.logic.*;
+import com.naromil.qcsimple.logic.UnitImportContext;
 import net.querz.nbt.tag.CompoundTag;
 
-import java.util.Map;
+/**
+ * The inner wall: a 7x7x1 or 7x7x3 structure closing the border between two units whose shared
+ * wall flags are set without a gate.
+ */
+public class InnerWall extends InnerStructure {
 
-public class InnerWall extends QCComponent {
-    public InnerWall() { super(); }
+    public InnerWall() {
+        super();
+    }
+
     public InnerWall(String path, CompoundTag tag) {
         super(path, tag);
     }
 
+    @Override
     public void applyDefaultConfig() {
         setTag(NBTGenerator.generateSimpleStructureTag("minecraft:deepslate_bricks", new byte[][][]{
                 {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}, {-1, 0, -1}},
@@ -28,51 +32,24 @@ public class InnerWall extends QCComponent {
         setPath("[Generated Default: Deepslate Bricks]");
     }
 
-    public static boolean isValidSize(int x, int y, int z) {
+    @Override
+    public boolean isValidSize(int x, int y, int z) {
         return x == 7 && y == 7 && (z == 1 || z == 3);
     }
 
-    public static boolean canBePlacedSouth(Map<Point2D, QCUnit> currentLayerMap, int dx, int dz) {
-        QCUnit uNW = currentLayerMap.get(new Point2D(dx, dz));
-        QCUnit uSW = currentLayerMap.get(new Point2D(dx, dz + 1));
-
-        if (uNW != null && uSW != null && uSW.hasWallN() && uNW.hasWallS()) {
-            boolean isGate = uSW.isGateN() && uNW.isGateS();
-            return !isGate;
-        }
+    @Override
+    protected boolean acceptsGateSides() {
         return false;
     }
 
-    public static Point3D getRelativePosSouth(int dx, int dy, int dz, InnerWall innerWall) {
-        int intersectX = dx * 8;
-        int intersectY = dy * 8;
-        int intersectZ = dz * 8 + 8;
-
-        int zDepth = innerWall.getZ();
-        int outShift = (zDepth == 3) ? 1 : 0;
-
-        return new Point3D(intersectX + 1, intersectY + 1, intersectZ - outShift);
-    }
-
-    public static boolean canBePlacedEast(Map<Point2D, QCUnit> currentLayerMap, int dx, int dz) {
-        QCUnit uNW = currentLayerMap.get(new Point2D(dx, dz));
-        QCUnit uNE = currentLayerMap.get(new Point2D(dx + 1, dz));
-
-        if (uNW != null && uNE != null && uNE.hasWallW() && uNW.hasWallE()) {
-            boolean isGate = uNE.isGateW() && uNW.isGateE();
-            return !isGate;
+    @Override
+    public void onDetectedSide(UnitImportContext ctx, int absX, int absY, int absZ, UnitSide side) {
+        if (ctx.innerWallExtracted()) {
+            return;
         }
-        return false;
-    }
-
-    public static Point3D getRelativePosEast(int dx, int dy, int dz, InnerWall innerWall) {
-        int intersectX = dx * 8 + 8;
-        int intersectY = dy * 8;
-        int intersectZ = dz * 8;
-
-        int zDepth = innerWall.getZ();
-        int outShift = (zDepth == 3) ? 1 : 0;
-
-        return new Point3D(intersectX + outShift, intersectY + 1, intersectZ + 1);
+        extractSide(ctx, absX, absY, absZ, side);
+        if (!isEmpty()) {
+            ctx.markInnerWallExtracted();
+        }
     }
 }
